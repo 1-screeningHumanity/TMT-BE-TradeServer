@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: trade-server
+  datasource:
+    url: ${TRADE_DB}
+    username: ${TRADE_DB_USER}
+    password: ${TRADE_DB_PW}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
+#RAMDOM PORT
+server:
+  port: 0
+
+#eureka
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    hostname: localhost
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URl}
+
+logging:
+  level:
+    org.hibernate.type: debug
+    p6spy: info
+
+springdoc:
+  packages-to-scan: ScreeningHumanity.TradeServer
+  default-consumes-media-type: application/json;charset=UTF-8
+  default-produces-media-type: application/json;charset=UTF-8
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    display-query-params-without-oauth2: true
+    doc-expansion: none
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /api-docs/json
+    groups:
+      enabled: true
+  cache:
+    disabled: true
