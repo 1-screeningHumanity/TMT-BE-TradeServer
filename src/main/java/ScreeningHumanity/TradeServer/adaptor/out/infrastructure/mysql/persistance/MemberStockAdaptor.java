@@ -26,11 +26,6 @@ public class MemberStockAdaptor implements SaveMemberStockPort, LoadMemberStockP
     }
 
     @Override
-    public void SaveNewMemberStock(MemberStock memberStock) {
-        memberStockJpaRepository.save(MemberStockEntity.toEntityFrom(memberStock));
-    }
-
-    @Override
     public void SaveMemberStock(MemberStock memberStock) {
         memberStockJpaRepository.save(MemberStockEntity.toEntityFrom(memberStock));
     }
