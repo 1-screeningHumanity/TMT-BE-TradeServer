@@ -14,8 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReservationSell {
-
-    private Long id;
     private String uuid;
     private Long price;
     private LocalDateTime createdAt;

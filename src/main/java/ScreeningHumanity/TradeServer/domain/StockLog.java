@@ -14,8 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StockLog {
-
-    private Long id;
     private Long amount;
     private Long price;
     private LocalDateTime createdAt;

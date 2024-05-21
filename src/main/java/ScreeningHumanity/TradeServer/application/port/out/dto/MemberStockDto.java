@@ -1,20 +1,22 @@
-package ScreeningHumanity.TradeServer.domain;
+package ScreeningHumanity.TradeServer.application.port.out.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-/**
- * 보유 주식 Domain
- */
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MemberStock {
+@Setter
+@ToString
+public class MemberStockDto {
+
     private Long id;
-    private String uuid; //
+    private String uuid;
     private Long amount; //보유 주식 갯수, 사고 팔때마다 변경.
     private Long totalPrice; //총 매수 금액 --금지
     private Long totalAmount; //총 매수 주식 갯수 --금지
