@@ -13,7 +13,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Setter
 @ToString
-public class MemberStockDto {
+public class MemberStockOutDto {
 
     private Long id;
     private String uuid;

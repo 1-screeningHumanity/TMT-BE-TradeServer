@@ -1,7 +1,7 @@
 package ScreeningHumanity.TradeServer.application.service;
 
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
@@ -28,7 +28,7 @@ public class StockBuyService implements StockUseCase {
     @Transactional
     @Override
     public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid) {
-        Optional<MemberStockDto> loadMemberStockDto = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
+        Optional<MemberStockOutDto> loadMemberStockDto = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
                 uuid, receiveStockBuyDto.getStockCode());
 
         if (loadMemberStockDto.isEmpty()) {
@@ -45,7 +45,7 @@ public class StockBuyService implements StockUseCase {
     @Transactional
     @Override
     public void SaleStock(StockBuySaleDto receiveStockSaleDto, String uuid) {
-        MemberStockDto loadMemberStockDto =
+        MemberStockOutDto loadMemberStockDto =
                 loadMemberStockPort
                         .LoadMemberStockByUuidAndStockCode(uuid, receiveStockSaleDto.getStockCode())
                         .orElseThrow(() -> new CustomException(
@@ -56,7 +56,7 @@ public class StockBuyService implements StockUseCase {
         saveStockLogPort.saveStockLog(modelMapper.map(receiveStockSaleDto, StockLog.class), StockLogStatus.SALE, uuid);
     }
 
-    private MemberStock saleMemberStock(MemberStockDto loadMemberStockDto,
+    private MemberStock saleMemberStock(MemberStockOutDto loadMemberStockDto,
             StockBuySaleDto stockBuyDto) {
         Long targetAmount = loadMemberStockDto.getAmount() - stockBuyDto.getAmount();
 
@@ -76,7 +76,7 @@ public class StockBuyService implements StockUseCase {
                 .build();
     }
 
-    private MemberStock updateMemberStock(MemberStockDto loadMemberStockDto,
+    private MemberStock updateMemberStock(MemberStockOutDto loadMemberStockDto,
             StockBuySaleDto stockBuyDto) {
         Long targetAmount = loadMemberStockDto.getAmount() + stockBuyDto.getAmount();
         Long targetTotalPrice = loadMemberStockDto.getTotalPrice() + (stockBuyDto.getAmount()

@@ -2,7 +2,7 @@ package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.persistan
 
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity.MemberStockEntity;
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.repository.MemberStockJpaRepository;
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.domain.MemberStock;
@@ -19,10 +19,10 @@ public class MemberStockAdaptor implements SaveMemberStockPort, LoadMemberStockP
     private final ModelMapper modelMapper;
 
     @Override
-    public Optional<MemberStockDto> LoadMemberStockByUuidAndStockCode(String uuid, Long stockCode) {
+    public Optional<MemberStockOutDto> LoadMemberStockByUuidAndStockCode(String uuid, Long stockCode) {
         Optional<MemberStockEntity> loadMemberStock = memberStockJpaRepository.findAllByUuidAndStockCode(
                 uuid, stockCode);
-        return Optional.ofNullable(modelMapper.map(loadMemberStock, MemberStockDto.class));
+        return Optional.ofNullable(modelMapper.map(loadMemberStock, MemberStockOutDto.class));
     }
 
     @Override
