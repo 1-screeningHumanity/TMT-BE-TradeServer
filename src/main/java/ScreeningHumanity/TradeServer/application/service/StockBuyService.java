@@ -51,7 +51,6 @@ public class StockBuyService implements StockUseCase {
         Long targetAmount = loadMemberStockDto.getAmount() - stockBuyDto.getAmount();
 
         if (targetAmount < 0) {
-            //todo : 여기서 Row 지워줄지, 스케줄링 적용할 지 생각 해봐야됨.
             throw new CustomException(BaseResponseCode.SALE_STOCK_NEGATIVE_TARGET_ERROR);
         }
 
