@@ -8,14 +8,14 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
 
 #RAMDOM PORT
 server:
-  port: 9000
+  port: 0
 
 #eureka
 eureka:
