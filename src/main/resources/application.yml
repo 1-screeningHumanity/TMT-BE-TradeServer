@@ -15,7 +15,7 @@ spring:
 
 #RAMDOM PORT
 server:
-  port: 0
+  port: 9000
 
 #eureka
 eureka:
@@ -50,3 +50,7 @@ springdoc:
       enabled: true
   cache:
     disabled: true
+
+#Token
+JWT:
+  SECRET_KEY: sldkfjsoidfjwoeir12393012809vxcv89usdfkjn1203491iu0isdfl

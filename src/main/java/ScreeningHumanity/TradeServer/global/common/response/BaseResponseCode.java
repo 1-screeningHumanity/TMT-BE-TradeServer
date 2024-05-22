@@ -25,6 +25,8 @@ public enum BaseResponseCode {
     SUCCESS(HttpStatus.OK, true, 200, "요청 응답 성공"),
 
     // 매수/매도 에러
+    SALE_STOCK_NOT_EXIST_ERROR(HttpStatus.BAD_REQUEST, false, 2000, "매도할 보유주식이 없습니다."),
+    SALE_STOCK_NEGATIVE_TARGET_ERROR(HttpStatus.BAD_REQUEST, false, 2001, "매도 수량보다 보유 수량이 적습니다."),
 
     //공통 에러. 9000 ~ 9999
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, false, 9000, "서버 에러"),
