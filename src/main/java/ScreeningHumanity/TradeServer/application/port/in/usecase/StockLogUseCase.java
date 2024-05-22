@@ -1,9 +1,9 @@
 package ScreeningHumanity.TradeServer.application.port.in.usecase;
 
-import ScreeningHumanity.TradeServer.domain.StockLog;
+import ScreeningHumanity.TradeServer.application.port.out.dto.StockLogOutDto;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 
 public interface StockLogUseCase {
-    List<StockLog> LoadStockLog(Pageable pageable, String uuid);
+    List<StockLogOutDto> LoadStockLog(Pageable pageable, String uuid);
 }

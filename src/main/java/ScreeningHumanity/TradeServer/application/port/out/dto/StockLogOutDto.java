@@ -19,7 +19,6 @@ public class StockLogOutDto {
     private String stockName;
     private String price;
     private String amount;
-    private String rate;
     private String totalPrice;
     private StockLogStatus status;
 }

@@ -1,11 +1,14 @@
 package ScreeningHumanity.TradeServer.application.service;
 
-import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity.StockLogEntity;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockLogUseCase;
+import ScreeningHumanity.TradeServer.application.port.out.dto.StockLogOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadStockLogPort;
 import ScreeningHumanity.TradeServer.domain.StockLog;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +18,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class StockLogService implements StockLogUseCase {
 
     private final LoadStockLogPort loadStockLogPort;
+    private final ModelMapper modelMapper;
 
     @Transactional(readOnly = true)
     @Override
-    public List<StockLog> LoadStockLog(Pageable pageable, String uuid) {
-        return loadStockLogPort.loadStockLog(pageable, uuid);
+    public List<StockLogOutDto> LoadStockLog(Pageable pageable, String uuid) {
+        List<StockLog> stockLogs = loadStockLogPort.loadStockLog(pageable, uuid);
+        return stockLogs.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    private StockLogOutDto convertToDto(StockLog stockLog) {
+        StockLogOutDto dto = modelMapper.map(stockLog, StockLogOutDto.class);
+
+        dto.setTime(stockLog.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        dto.setTotalPrice(String.valueOf(stockLog.getPrice() * stockLog.getAmount()));
+
+        return dto;
     }
 }

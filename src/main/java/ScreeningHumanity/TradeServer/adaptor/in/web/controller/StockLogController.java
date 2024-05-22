@@ -3,7 +3,7 @@ package ScreeningHumanity.TradeServer.adaptor.in.web.controller;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockLogUseCase;
-import ScreeningHumanity.TradeServer.domain.StockLog;
+import ScreeningHumanity.TradeServer.application.port.out.dto.StockLogOutDto;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +27,7 @@ public class StockLogController {
 
     @Operation(summary = "매수/매도 조회 API", description = "매수/매도 조회 API 호출")
     @GetMapping("/trade-lists")
-    public BaseResponse<List<StockLog>> stockBuy(
+    public BaseResponse<List<StockLogOutDto>> stockBuy(
             @RequestParam(defaultValue = "0", required = false) int page,
             @RequestParam(defaultValue = "50", required = false) int size,
 //            @RequestParam(defaultValue = "createdAt", required = false) String sortField,
@@ -37,7 +37,7 @@ public class StockLogController {
         Pageable pageable = PageRequest.of(page, size);
 //                PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDirection), sortField));
         String uuid = decodingToken.getUuid(accessToken);
-        List<StockLog> stockLogs = stockLogUseCase.LoadStockLog(pageable, uuid);
-        return new BaseResponse<>(stockLogs);
+
+        return new BaseResponse<>(stockLogUseCase.LoadStockLog(pageable, uuid));
     }
 }
