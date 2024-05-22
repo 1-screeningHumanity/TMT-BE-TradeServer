@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Stock Buy API", description = "주식 매수 API")
-public class StockBuyController {
+public class StockController {
 
     private final StockUseCase stockUseCase;
     private final ModelMapper modelMapper;
@@ -31,7 +31,19 @@ public class StockBuyController {
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         stockUseCase.BuyStock(
-                modelMapper.map(requestStockBuyVo, StockUseCase.StockBuyDto.class),
+                modelMapper.map(requestStockBuyVo, StockUseCase.StockBuySaleDto.class),
+                decodingToken.getUuid(accessToken));
+        return new BaseResponse<>();
+    }
+
+    @Operation(summary = "매도 api", description = "매도 API 호출")
+    @PostMapping("/sale")
+    public BaseResponse<Void> stockSale(
+            @RequestBody RequestVo.StockSale requestStockSaleVo,
+            @RequestHeader(AUTHORIZATION) String accessToken
+    ) {
+        stockUseCase.SaleStock(
+                modelMapper.map(requestStockSaleVo, StockUseCase.StockBuySaleDto.class),
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>();
     }

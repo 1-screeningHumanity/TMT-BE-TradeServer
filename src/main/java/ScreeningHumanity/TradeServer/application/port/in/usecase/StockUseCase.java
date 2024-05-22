@@ -8,14 +8,15 @@ import lombok.ToString;
 
 public interface StockUseCase {
 
-    void BuyStock(StockBuyDto stockBuyDto, String uuid);
+    void BuyStock(StockBuySaleDto stockBuyDto, String uuid);
+    void SaleStock(StockBuySaleDto stockSaleDto, String uuid);
 
     @Getter
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     @ToString
-    class StockBuyDto {
+    class StockBuySaleDto {
 
         private Long stockCode;
         private Long price;

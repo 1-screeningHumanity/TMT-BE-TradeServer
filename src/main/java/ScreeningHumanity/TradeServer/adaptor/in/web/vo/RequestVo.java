@@ -16,4 +16,15 @@ public class RequestVo {
         @NotNull
         private Long amount;
     }
+
+    @Getter
+    public static class StockSale {
+
+        @NotNull
+        private Long stockCode;
+        @NotNull
+        private Long price;
+        @NotNull
+        private Long amount;
+    }
 }
