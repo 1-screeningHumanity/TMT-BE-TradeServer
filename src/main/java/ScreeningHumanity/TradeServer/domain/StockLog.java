@@ -21,4 +21,5 @@ public class StockLog {
     private String uuid;
     private Long stockCode;
     private LocalDateTime createdAt;
+    private String stockName;
 }

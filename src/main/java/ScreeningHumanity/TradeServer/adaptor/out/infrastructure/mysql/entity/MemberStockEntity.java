@@ -38,6 +38,9 @@ public class MemberStockEntity {
     @Column(name = "stock_code", nullable = false)
     private Long stockCode;
 
+    @Column(name = "stock_name", nullable = false)
+    private String stockName;
+
     public static MemberStockEntity toEntityFrom(MemberStock memberStock){
         return MemberStockEntity
                 .builder()
@@ -47,6 +50,7 @@ public class MemberStockEntity {
                 .totalPrice(memberStock.getTotalPrice())
                 .totalAmount(memberStock.getTotalAmount())
                 .stockCode(memberStock.getStockCode())
+                .stockName(memberStock.getStockName())
                 .build();
     }
 }

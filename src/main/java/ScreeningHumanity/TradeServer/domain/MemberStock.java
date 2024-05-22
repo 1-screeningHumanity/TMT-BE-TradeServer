@@ -19,4 +19,5 @@ public class MemberStock {
     private Long totalPrice; //총 매수 금액 --금지
     private Long totalAmount; //총 매수 주식 갯수 --금지
     private Long stockCode; //종목 코드
+    private String stockName; //종목 이름
 }

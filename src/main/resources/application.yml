@@ -15,7 +15,7 @@ spring:
 
 #RAMDOM PORT
 server:
-  port: 0
+  port: 9000
 
 #eureka
 eureka:

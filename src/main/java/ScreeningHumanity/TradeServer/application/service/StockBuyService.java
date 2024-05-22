@@ -72,6 +72,7 @@ public class StockBuyService implements StockUseCase {
                 .totalPrice(loadMemberStockDto.getTotalPrice())
                 .totalAmount(loadMemberStockDto.getTotalAmount())
                 .stockCode(loadMemberStockDto.getStockCode())
+                .stockName(loadMemberStockDto.getStockName())
                 .build();
     }
 
@@ -90,6 +91,7 @@ public class StockBuyService implements StockUseCase {
                 .totalPrice(targetTotalPrice)
                 .totalAmount(targetTotalAmount)
                 .stockCode(loadMemberStockDto.getStockCode())
+                .stockName(loadMemberStockDto.getStockName())
                 .build();
     }
 
@@ -102,6 +104,7 @@ public class StockBuyService implements StockUseCase {
                 .totalPrice(targetTotalPrice)
                 .totalAmount(stockBuyDto.getAmount())
                 .stockCode(stockBuyDto.getStockCode())
+                .stockName(stockBuyDto.getStockName())
                 .build();
     }
 }

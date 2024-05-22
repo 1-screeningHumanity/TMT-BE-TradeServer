@@ -1,5 +1,6 @@
 package ScreeningHumanity.TradeServer.application.port.in.usecase;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,5 +23,6 @@ public interface StockUseCase {
         private Long price;
         private Long amount;
         private String uuid;
+        private String stockName;
     }
 }

@@ -15,6 +15,8 @@ public class RequestVo {
         private Long price;
         @NotNull
         private Long amount;
+        @NotNull
+        private String stockName;
     }
 
     @Getter
@@ -26,5 +28,7 @@ public class RequestVo {
         private Long price;
         @NotNull
         private Long amount;
+        @NotNull
+        private String stockName;
     }
 }

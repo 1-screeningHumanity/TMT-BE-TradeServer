@@ -43,6 +43,9 @@ public class StockLogEntity extends BaseEntity {
     @Column(name = "stock_code", nullable = false)
     private Long stockCode;
 
+    @Column(name = "stock_name", nullable = false)
+    private String stockName;
+
     public static StockLogEntity toEntityFrom(StockLog stockLog, StockLogStatus status, String uuid){
         return StockLogEntity
                 .builder()
@@ -52,6 +55,7 @@ public class StockLogEntity extends BaseEntity {
                 .status(status)
                 .uuid(uuid)
                 .stockCode(stockLog.getStockCode())
+                .stockName(stockLog.getStockName())
                 .build();
     }
 }
