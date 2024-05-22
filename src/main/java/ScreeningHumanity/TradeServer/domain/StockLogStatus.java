@@ -6,5 +6,5 @@ package ScreeningHumanity.TradeServer.domain;
  */
 public enum StockLogStatus {
     BUY,
-    SELL
+    SALE
 }

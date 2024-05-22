@@ -4,11 +4,15 @@ import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
 import ScreeningHumanity.TradeServer.domain.MemberStock;
+import ScreeningHumanity.TradeServer.domain.StockLog;
+import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +22,8 @@ public class StockBuyService implements StockUseCase {
 
     private final SaveMemberStockPort saveMemberStockPort;
     private final LoadMemberStockPort loadMemberStockPort;
+    private final SaveStockLogPort saveStockLogPort;
+    private final ModelMapper modelMapper;
 
     @Transactional
     @Override
@@ -28,12 +34,15 @@ public class StockBuyService implements StockUseCase {
         if (loadMemberStockDto.isEmpty()) {
             MemberStock memberStock = createMemberStock(receiveStockBuyDto, uuid);
             saveMemberStockPort.SaveMemberStock(memberStock);
+            saveStockLogPort.saveStockLog(modelMapper.map(receiveStockBuyDto, StockLog.class), StockLogStatus.BUY, uuid);
             return;
         }
         MemberStock memberStock = updateMemberStock(loadMemberStockDto.get(), receiveStockBuyDto);
         saveMemberStockPort.SaveMemberStock(memberStock);
+        saveStockLogPort.saveStockLog(modelMapper.map(receiveStockBuyDto, StockLog.class), StockLogStatus.BUY, uuid);
     }
 
+    @Transactional
     @Override
     public void SaleStock(StockBuySaleDto receiveStockSaleDto, String uuid) {
         MemberStockDto loadMemberStockDto =
@@ -44,6 +53,7 @@ public class StockBuyService implements StockUseCase {
 
         MemberStock memberStock = saleMemberStock(loadMemberStockDto, receiveStockSaleDto);
         saveMemberStockPort.SaveMemberStock(memberStock);
+        saveStockLogPort.saveStockLog(modelMapper.map(receiveStockSaleDto, StockLog.class), StockLogStatus.SALE, uuid);
     }
 
     private MemberStock saleMemberStock(MemberStockDto loadMemberStockDto,
