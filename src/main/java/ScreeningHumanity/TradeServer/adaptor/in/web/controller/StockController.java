@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Stock Buy API", description = "주식 매수 API")
+@Tag(name = "Stock Buy/Sale API", description = "주식 매수 API")
 public class StockController {
 
     private final StockUseCase stockUseCase;
