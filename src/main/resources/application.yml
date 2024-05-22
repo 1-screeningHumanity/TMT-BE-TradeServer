@@ -21,7 +21,7 @@ server:
 eureka:
   instance:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-    hostname: localhost
+#    hostname: localhost
   client:
     register-with-eureka: true
     fetch-registry: true
