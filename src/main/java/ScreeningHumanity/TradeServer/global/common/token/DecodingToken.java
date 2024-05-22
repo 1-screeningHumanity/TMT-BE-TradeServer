@@ -32,8 +32,6 @@ public class DecodingToken {
 
         jwt = jwt.substring(7);
 
-        String SECRET_KEY = environment.getProperty("JWT.SECRET_KEY");
-        log.info("token = {}, secret_key = {}", jwt, SECRET_KEY);
         return Jwts.parser().setSigningKey(environment.getProperty("JWT.SECRET_KEY"))
                 .parseClaimsJws(jwt).getBody();
     }
