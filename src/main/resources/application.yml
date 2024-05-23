@@ -50,3 +50,6 @@ springdoc:
       enabled: true
   cache:
     disabled: true
+
+url:
+  gateway: ${GATEWAY_URl}
