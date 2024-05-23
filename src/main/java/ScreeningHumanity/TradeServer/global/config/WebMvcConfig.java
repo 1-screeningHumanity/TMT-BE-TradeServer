@@ -11,6 +11,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api-docs/json")
-                .allowedOrigins("https://screeninghumanity.shop");
+                .allowedOrigins("http://43.200.120.99:8282");
     }
 }
