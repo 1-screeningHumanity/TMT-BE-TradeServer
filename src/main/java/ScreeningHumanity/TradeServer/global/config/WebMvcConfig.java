@@ -8,12 +8,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Value("${url.gateway}")
-    private String allowedOrigin;
-
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api-docs/json")
-                .allowedOrigins(allowedOrigin);
+                .allowedOrigins("https://screeninghumanity.shop");
     }
 }
