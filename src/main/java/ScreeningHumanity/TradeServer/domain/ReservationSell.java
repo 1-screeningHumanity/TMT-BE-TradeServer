@@ -17,5 +17,5 @@ public class ReservationSell {
     private String uuid;
     private Long price;
     private LocalDateTime createdAt;
-    private Long stockCode;
+    private String stockCode;
 }

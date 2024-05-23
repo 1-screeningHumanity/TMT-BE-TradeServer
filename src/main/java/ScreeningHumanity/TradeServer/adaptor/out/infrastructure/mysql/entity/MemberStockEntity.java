@@ -36,7 +36,7 @@ public class MemberStockEntity {
     private Long totalAmount;
 
     @Column(name = "stock_code", nullable = false)
-    private Long stockCode;
+    private String stockCode;
 
     @Column(name = "stock_name", nullable = false)
     private String stockName;

@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MemberStockJpaRepository extends JpaRepository<MemberStockEntity, Long> {
 
-    Optional<MemberStockEntity> findAllByUuidAndStockCode(String uuid, Long stockCode);
+    Optional<MemberStockEntity> findAllByUuidAndStockCode(String uuid, String stockCode);
 }

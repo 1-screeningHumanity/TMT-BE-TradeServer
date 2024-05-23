@@ -19,7 +19,7 @@ public class MemberStockAdaptor implements SaveMemberStockPort, LoadMemberStockP
     private final ModelMapper modelMapper;
 
     @Override
-    public Optional<MemberStockOutDto> LoadMemberStockByUuidAndStockCode(String uuid, Long stockCode) {
+    public Optional<MemberStockOutDto> LoadMemberStockByUuidAndStockCode(String uuid, String stockCode) {
         Optional<MemberStockEntity> loadMemberStock = memberStockJpaRepository.findAllByUuidAndStockCode(
                 uuid, stockCode);
         return Optional.ofNullable(modelMapper.map(loadMemberStock, MemberStockOutDto.class));

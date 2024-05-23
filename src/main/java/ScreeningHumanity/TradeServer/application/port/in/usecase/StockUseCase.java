@@ -19,7 +19,7 @@ public interface StockUseCase {
     @ToString
     class StockBuySaleDto {
 
-        private Long stockCode;
+        private String stockCode;
         private Long price;
         private Long amount;
         private String uuid;

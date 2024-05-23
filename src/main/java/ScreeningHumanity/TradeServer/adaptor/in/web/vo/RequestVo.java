@@ -2,7 +2,6 @@ package ScreeningHumanity.TradeServer.adaptor.in.web.vo;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.ToString;
 
 public class RequestVo {
 
@@ -10,7 +9,7 @@ public class RequestVo {
     public static class StockBuy {
 
         @NotNull
-        private Long stockCode;
+        private String stockCode;
         @NotNull
         private Long price;
         @NotNull
@@ -23,7 +22,7 @@ public class RequestVo {
     public static class StockSale {
 
         @NotNull
-        private Long stockCode;
+        private String stockCode;
         @NotNull
         private Long price;
         @NotNull

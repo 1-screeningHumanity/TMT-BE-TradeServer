@@ -41,7 +41,7 @@ public class StockLogEntity extends BaseEntity {
     private String uuid;
 
     @Column(name = "stock_code", nullable = false)
-    private Long stockCode;
+    private String stockCode;
 
     @Column(name = "stock_name", nullable = false)
     private String stockName;

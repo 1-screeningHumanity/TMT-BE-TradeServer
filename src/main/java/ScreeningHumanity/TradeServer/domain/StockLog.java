@@ -19,7 +19,7 @@ public class StockLog {
     private Long price;
     private StockLogStatus status;
     private String uuid;
-    private Long stockCode;
+    private String stockCode;
     private LocalDateTime createdAt;
     private String stockName;
 }
