@@ -8,7 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
@@ -21,7 +21,7 @@ server:
 eureka:
   instance:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-    hostname: trade-server
+    hostname: localhost
   client:
     register-with-eureka: true
     fetch-registry: true
@@ -50,7 +50,6 @@ springdoc:
       enabled: true
   cache:
     disabled: true
-
 
 url:
   gateway: ${GATEWAY_URl}
