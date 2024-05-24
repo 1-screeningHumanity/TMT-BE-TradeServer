@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.servers.Server;
 import java.util.ArrayList;
 import java.util.List;
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,9 @@ public class SwaggerConfig {
     private static final String BEARER_SCHEME = "bearer";
     private static final String BEARER_FORMAT = "JWT";
     private int serverPort;
+
+    @Value("${spring.application.name}")
+    private String applicationName;
 
     @EventListener
     public void onApplicationEvent(WebServerInitializedEvent event) {
@@ -60,7 +64,7 @@ public class SwaggerConfig {
         localServer.setDescription("Local Test Server URL");
 
         Server dynamicServer = new Server();
-        dynamicServer.setUrl("https://screeninghumanity.shop/api/v1");
+        dynamicServer.setUrl("https://screeninghumanity.shop/" + applicationName + "api/v1");
         dynamicServer.setDescription("");
 
         servers.add(localServer);
