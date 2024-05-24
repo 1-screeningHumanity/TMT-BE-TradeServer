@@ -64,7 +64,7 @@ public class SwaggerConfig {
         localServer.setDescription("Local Test Server URL");
 
         Server dynamicServer = new Server();
-        dynamicServer.setUrl("https://screeninghumanity.shop/" + applicationName + "api/v1");
+        dynamicServer.setUrl("https://screeninghumanity.shop/api/v1/trade");
         dynamicServer.setDescription("");
 
         servers.add(localServer);
