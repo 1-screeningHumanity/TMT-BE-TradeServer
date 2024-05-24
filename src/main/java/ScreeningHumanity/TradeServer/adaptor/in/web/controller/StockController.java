@@ -9,14 +9,18 @@ import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping
+@Slf4j
 @Tag(name = "Stock Buy/Sale API", description = "주식 매수 API")
 public class StockController {
 
@@ -30,6 +34,7 @@ public class StockController {
             @RequestBody RequestVo.StockBuy requestStockBuyVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
+        log.info("매수 API 실행");
         stockUseCase.BuyStock(
                 modelMapper.map(requestStockBuyVo, StockUseCase.StockBuySaleDto.class),
                 decodingToken.getUuid(accessToken));
