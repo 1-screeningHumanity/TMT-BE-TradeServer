@@ -29,12 +29,24 @@ public class ReservationStockController {
 
     @Operation(summary = "예약 매수 api", description = "예약 매수 API 호출")
     @PostMapping("/reservation/buy")
-    public BaseResponse<Void> stockBuy(
+    public BaseResponse<Void> ReservationStockBuy(
             @RequestBody RequestVo.StockBuy requestStockBuyVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         reservationStockUseCase.BuyStock(
                 modelMapper.map(requestStockBuyVo, ReservationStockUseCase.StockBuySaleDto.class),
+                decodingToken.getUuid(accessToken));
+        return new BaseResponse<>();
+    }
+
+    @Operation(summary = "예약 매도 api", description = "예약 매도 API 호출")
+    @PostMapping("/reservation/sale")
+    public BaseResponse<Void> ReservationStockSale(
+            @RequestBody RequestVo.StockSale requestStockSaleVo,
+            @RequestHeader(AUTHORIZATION) String accessToken
+    ) {
+        reservationStockUseCase.SaleStock(
+                modelMapper.map(requestStockSaleVo, ReservationStockUseCase.StockBuySaleDto.class),
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>();
     }

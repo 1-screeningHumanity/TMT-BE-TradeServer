@@ -8,6 +8,7 @@ import lombok.ToString;
 
 public interface ReservationStockUseCase {
     void BuyStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
+    void SaleStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
 
     @Getter
     @Builder

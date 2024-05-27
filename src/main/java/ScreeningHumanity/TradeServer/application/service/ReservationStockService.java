@@ -4,6 +4,7 @@ import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStoc
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservationStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveReservationStockPort;
 import ScreeningHumanity.TradeServer.domain.ReservationBuy;
+import ScreeningHumanity.TradeServer.domain.ReservationSale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +18,31 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Override
     public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid) {
 
-        ReservationBuy reservationBuy = createReservationStock(receiveStockBuyDto, uuid);
+        ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
 
         saveReservationStockPort.SaveReservationBuyStock(reservationBuy);
     }
 
-    private ReservationBuy createReservationStock(StockBuySaleDto receiveStockBuyDto, String uuid){
+    @Override
+    public void SaleStock(StockBuySaleDto stockBuyDto, String uuid) {
+        ReservationSale reservationSaleStock = createReservationSaleStock(stockBuyDto, uuid);
+
+        saveReservationStockPort.SaveReservationSaleStock(reservationSaleStock);
+    }
+
+    private ReservationBuy createReservationBuyStock(StockBuySaleDto receiveStockBuyDto, String uuid){
         return ReservationBuy
+                .builder()
+                .uuid(uuid)
+                .price(receiveStockBuyDto.getPrice())
+                .amount(receiveStockBuyDto.getAmount())
+                .stockCode(receiveStockBuyDto.getStockCode())
+                .stockName(receiveStockBuyDto.getStockName())
+                .build();
+    }
+
+    private ReservationSale createReservationSaleStock(StockBuySaleDto receiveStockBuyDto, String uuid){
+        return ReservationSale
                 .builder()
                 .uuid(uuid)
                 .price(receiveStockBuyDto.getPrice())
