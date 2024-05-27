@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -55,7 +56,7 @@ public class ReservationStockController {
     }
 
     @Operation(summary = "예약 매도/매수 조회 api", description = "예약 매도/매수 조회 API 호출")
-    @PostMapping("/reservation/trade-lists")
+    @GetMapping("/reservation/trade-lists")
     public BaseResponse<List<ReservationLogOutDto>> ReservationStockLog(
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
