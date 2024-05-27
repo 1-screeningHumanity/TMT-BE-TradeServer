@@ -31,7 +31,7 @@ public class StockLogController {
 
     @Operation(summary = "매수/매도 조회 API", description = "매수/매도 조회 API 호출")
     @GetMapping("/trade-lists")
-    public BaseResponse<List<StockLogOutDto>> stockBuy(
+    public BaseResponse<List<StockLogOutDto>> StockLog(
             @RequestParam(defaultValue = "0", required = false) int page,
             @RequestParam(defaultValue = "50", required = false) int size,
 //            @RequestParam(defaultValue = "createdAt", required = false) String sortField,

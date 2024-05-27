@@ -1,5 +1,7 @@
 package ScreeningHumanity.TradeServer.application.port.in.usecase;
 
+import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -7,8 +9,12 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 public interface ReservationStockUseCase {
+
     void BuyStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
+
     void SaleStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
+
+    List<ReservationLogOutDto> BuySaleLog(String uuid);
 
     @Getter
     @Builder
