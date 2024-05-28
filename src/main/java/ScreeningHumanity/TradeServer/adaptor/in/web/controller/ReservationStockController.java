@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping
+@RequestMapping("/reservation")
 @Slf4j
 @Tag(name = "Reservation Stock Buy/Sale API", description = "주식 예약 매매 API")
 public class ReservationStockController {
@@ -34,7 +34,7 @@ public class ReservationStockController {
     private final ReservationStockUseCase reservationStockUseCase;
 
     @Operation(summary = "예약 매수 api", description = "예약 매수 API 호출")
-    @PostMapping("/reservation/buy")
+    @PostMapping("/buy")
     public BaseResponse<Void> ReservationStockBuy(
             @RequestBody RequestVo.StockBuy requestStockBuyVo,
             @RequestHeader(AUTHORIZATION) String accessToken
@@ -46,7 +46,7 @@ public class ReservationStockController {
     }
 
     @Operation(summary = "예약 매도 api", description = "예약 매도 API 호출")
-    @PostMapping("/reservation/sale")
+    @PostMapping("/sale")
     public BaseResponse<Void> ReservationStockSale(
             @RequestBody RequestVo.StockSale requestStockSaleVo,
             @RequestHeader(AUTHORIZATION) String accessToken
@@ -58,7 +58,7 @@ public class ReservationStockController {
     }
 
     @Operation(summary = "예약 매도/매수 조회 api", description = "예약 매도/매수 조회 API 호출")
-    @GetMapping("/reservation/trade-lists")
+    @GetMapping("/trade-lists")
     public BaseResponse<List<ReservationLogOutDto>> ReservationStockLog(
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
@@ -68,7 +68,7 @@ public class ReservationStockController {
     }
 
     @Operation(summary = "예약 매도 취소 api", description = "예약 매도 취소 API 호출")
-    @DeleteMapping("/reservation/sale/{id}")
+    @DeleteMapping("/sale/{id}")
     public BaseResponse<Void> ReservationDeleteSaleStock(
             @PathVariable Long id
     ) {
@@ -77,7 +77,7 @@ public class ReservationStockController {
     }
 
     @Operation(summary = "예약 매수 취소 api", description = "예약 매수 취소 API 호출")
-    @DeleteMapping("/reservation/buy/{id}")
+    @DeleteMapping("/buy/{id}")
     public BaseResponse<Void> ReservationDeleteBuyStock(
             @PathVariable Long id
     ) {
