@@ -72,6 +72,12 @@ public class ReservationStockService implements ReservationStockUseCase {
         saveReservationStockPort.DeleteReservationSaleStock(saleId);
     }
 
+    @Transactional
+    @Override
+    public void DeleteBuyStock(Long saleId) {
+        saveReservationStockPort.DeleteReservationBuyStock(saleId);
+    }
+
     private ReservationLogOutDto convertToBuyDto(ReservationBuy buy) {
         ReservationLogOutDto dto = modelMapper.map(buy, ReservationLogOutDto.class);
 

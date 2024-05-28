@@ -44,6 +44,14 @@ public class MemberReservationStockAdaptor
     }
 
     @Override
+    public void DeleteReservationBuyStock(Long saleId) {
+        ReservationBuyEntity findResult = reservationBuyJpaRepository.findById(saleId).
+                orElseThrow(() -> new CustomException(
+                        BaseResponseCode.DELETE_RESERVATION_BUY_STOCK_ERROR));
+        reservationBuyJpaRepository.delete(findResult);
+    }
+
+    @Override
     public List<ReservationBuy> loadReservationBuy(String uuid) {
         List<ReservationBuyEntity> findList = reservationBuyJpaRepository.findAllByUuid(uuid);
         return findList.stream()

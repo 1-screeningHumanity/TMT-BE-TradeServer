@@ -18,6 +18,8 @@ public interface ReservationStockUseCase {
 
     void DeleteSaleStock(Long saleId);
 
+    void DeleteBuyStock(Long saleId);
+
     @Getter
     @Builder
     @AllArgsConstructor

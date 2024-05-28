@@ -70,10 +70,18 @@ public class ReservationStockController {
     @Operation(summary = "예약 매도 취소 api", description = "예약 매도 취소 API 호출")
     @DeleteMapping("/reservation/sale/{id}")
     public BaseResponse<Void> ReservationDeleteSaleStock(
-            @PathVariable Long id,
-            @RequestHeader(AUTHORIZATION) String accessToken
+            @PathVariable Long id
     ) {
         reservationStockUseCase.DeleteSaleStock(id);
+        return new BaseResponse<>();
+    }
+
+    @Operation(summary = "예약 매수 취소 api", description = "예약 매수 취소 API 호출")
+    @DeleteMapping("/reservation/buy/{id}")
+    public BaseResponse<Void> ReservationDeleteBuyStock(
+            @PathVariable Long id
+    ) {
+        reservationStockUseCase.DeleteBuyStock(id);
         return new BaseResponse<>();
     }
 }
