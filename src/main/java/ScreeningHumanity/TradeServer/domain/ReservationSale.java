@@ -13,9 +13,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReservationSell {
+public class ReservationSale {
+    private Long id;
     private String uuid;
     private Long price;
+    private Long amount;
     private LocalDateTime createdAt;
     private String stockCode;
+    private String stockName;
 }
