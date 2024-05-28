@@ -8,6 +8,8 @@ import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservatio
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveReservationStockPort;
 import ScreeningHumanity.TradeServer.domain.ReservationBuy;
 import ScreeningHumanity.TradeServer.domain.ReservationSale;
+import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
+import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,14 @@ public class MemberReservationStockAdaptor
     @Override
     public void SaveReservationSaleStock(ReservationSale reservationSale) {
         reservationSaleJpaRepository.save(ReservationSaleEntity.toEntityFrom(reservationSale));
+    }
+
+    @Override
+    public void DeleteReservationSaleStock(Long saleId) {
+        ReservationSaleEntity findResult = reservationSaleJpaRepository.findById(saleId).
+                orElseThrow(() -> new CustomException(
+                        BaseResponseCode.DELETE_RESERVATION_SALE_STOCK_ERROR));
+        reservationSaleJpaRepository.delete(findResult);
     }
 
     @Override

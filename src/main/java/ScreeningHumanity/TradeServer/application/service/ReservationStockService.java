@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     public static final String STATUS_BUY = "매수";
     public static final String STATUS_SALE = "매도";
 
-
+    @Transactional
     @Override
     public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid) {
 
@@ -36,6 +37,7 @@ public class ReservationStockService implements ReservationStockUseCase {
         saveReservationStockPort.SaveReservationBuyStock(reservationBuy);
     }
 
+    @Transactional
     @Override
     public void SaleStock(StockBuySaleDto stockBuyDto, String uuid) {
         ReservationSale reservationSaleStock = createReservationSaleStock(stockBuyDto, uuid);
@@ -43,6 +45,7 @@ public class ReservationStockService implements ReservationStockUseCase {
         saveReservationStockPort.SaveReservationSaleStock(reservationSaleStock);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ReservationLogOutDto> BuySaleLog(String uuid) {
         List<ReservationBuy> reservationBuys = loadReservationStockPort.loadReservationBuy(uuid);
@@ -63,10 +66,15 @@ public class ReservationStockService implements ReservationStockUseCase {
         return result;
     }
 
+    @Transactional
+    @Override
+    public void DeleteSaleStock(Long saleId) {
+        saveReservationStockPort.DeleteReservationSaleStock(saleId);
+    }
+
     private ReservationLogOutDto convertToBuyDto(ReservationBuy buy) {
         ReservationLogOutDto dto = modelMapper.map(buy, ReservationLogOutDto.class);
 
-//        dto.setTime(buy.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         dto.setTotalPrice(String.valueOf(buy.getPrice() * buy.getAmount()));
         dto.setStatus(STATUS_BUY);
 

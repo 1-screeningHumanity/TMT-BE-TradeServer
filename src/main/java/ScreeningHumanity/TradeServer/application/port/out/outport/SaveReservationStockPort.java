@@ -7,4 +7,6 @@ public interface SaveReservationStockPort {
     void SaveReservationBuyStock(ReservationBuy reservationBuy);
 
     void SaveReservationSaleStock(ReservationSale reservationSale);
+
+    void DeleteReservationSaleStock(Long saleId);
 }

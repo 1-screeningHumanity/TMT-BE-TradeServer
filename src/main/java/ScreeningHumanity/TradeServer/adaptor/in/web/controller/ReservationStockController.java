@@ -13,7 +13,9 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -63,5 +65,15 @@ public class ReservationStockController {
         List<ReservationLogOutDto> result = reservationStockUseCase.BuySaleLog(
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>(result);
+    }
+
+    @Operation(summary = "예약 매도 취소 api", description = "예약 매도 취소 API 호출")
+    @DeleteMapping("/reservation/sale/{id}")
+    public BaseResponse<Void> ReservationDeleteSaleStock(
+            @PathVariable Long id,
+            @RequestHeader(AUTHORIZATION) String accessToken
+    ) {
+        reservationStockUseCase.DeleteSaleStock(id);
+        return new BaseResponse<>();
     }
 }

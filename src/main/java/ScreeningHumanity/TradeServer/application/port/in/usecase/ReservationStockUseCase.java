@@ -16,6 +16,8 @@ public interface ReservationStockUseCase {
 
     List<ReservationLogOutDto> BuySaleLog(String uuid);
 
+    void DeleteSaleStock(Long saleId);
+
     @Getter
     @Builder
     @AllArgsConstructor
