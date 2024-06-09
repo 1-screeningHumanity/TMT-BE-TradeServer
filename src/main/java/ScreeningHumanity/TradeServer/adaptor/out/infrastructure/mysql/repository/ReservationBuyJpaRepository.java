@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ReservationBuyJpaRepository extends JpaRepository<ReservationBuyEntity, Long> {
 
     List<ReservationBuyEntity> findAllByUuid(String uuid);
+
+    List<ReservationBuyEntity> findByStockCodeAndPrice(String stockCode, Long price);
 }
