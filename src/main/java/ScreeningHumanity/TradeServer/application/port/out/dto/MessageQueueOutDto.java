@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-public class NotificationOutDto {
+public class MessageQueueOutDto {
 
     /**
      * 일반 매수 후, 금액 차감 요청 Dto

@@ -2,9 +2,9 @@ package ScreeningHumanity.TradeServer.application.service;
 
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
-import ScreeningHumanity.TradeServer.application.port.out.dto.NotificationOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
-import ScreeningHumanity.TradeServer.application.port.out.outport.NotificationPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
 import ScreeningHumanity.TradeServer.domain.MemberStock;
@@ -27,7 +27,7 @@ public class StockBuySaleService implements StockUseCase {
     private final SaveMemberStockPort saveMemberStockPort;
     private final LoadMemberStockPort loadMemberStockPort;
     private final SaveStockLogPort saveStockLogPort;
-    private final NotificationPort notificationPort;
+    private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -44,8 +44,8 @@ public class StockBuySaleService implements StockUseCase {
                     StockLogStatus.BUY, uuid);
 
             try {
-                notificationPort.send("trade-payment-buy",
-                        NotificationOutDto.BuyDto
+                messageQueuePort.send("trade-payment-buy",
+                        MessageQueueOutDto.BuyDto
                                 .builder()
                                 .price(memberStock.getTotalPrice())
                                 .uuid(uuid)
@@ -66,8 +66,8 @@ public class StockBuySaleService implements StockUseCase {
                 StockLogStatus.BUY, uuid);
 
         try {
-            notificationPort.send("trade-payment-buy",
-                    NotificationOutDto.BuyDto
+            messageQueuePort.send("trade-payment-buy",
+                    MessageQueueOutDto.BuyDto
                             .builder()
                             .price(receiveStockBuyDto.getPrice() * receiveStockBuyDto.getAmount())
                             .uuid(uuid)
@@ -97,9 +97,9 @@ public class StockBuySaleService implements StockUseCase {
                 StockLogStatus.SALE, uuid);
 
         try {
-            notificationPort.send(
+            messageQueuePort.send(
                     "trade-payment-sale",
-                    NotificationOutDto.BuyDto
+                    MessageQueueOutDto.BuyDto
                             .builder()
                             .uuid(uuid)
                             .price(receiveStockSaleDto.getPrice()

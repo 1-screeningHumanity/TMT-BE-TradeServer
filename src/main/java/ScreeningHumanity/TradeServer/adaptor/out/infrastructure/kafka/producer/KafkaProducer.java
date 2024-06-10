@@ -1,6 +1,6 @@
 package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.kafka.producer;
 
-import ScreeningHumanity.TradeServer.application.port.out.outport.NotificationPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.CompletableFuture;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class KafkaProducer implements NotificationPort {
+public class KafkaProducer implements MessageQueuePort {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 

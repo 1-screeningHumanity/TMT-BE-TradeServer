@@ -4,11 +4,11 @@ import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
-import ScreeningHumanity.TradeServer.application.port.out.dto.NotificationOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservationStockPort;
-import ScreeningHumanity.TradeServer.application.port.out.outport.NotificationPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveReservationStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
@@ -40,7 +40,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveMemberStockPort saveMemberStockPort;
     private final LoadMemberStockPort loadMemberStockPort;
     private final SaveStockLogPort saveStockLogPort;
-    private final NotificationPort notificationPort;
+    private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
 
     public static final String STATUS_BUY = "매수";
@@ -56,8 +56,8 @@ public class ReservationStockService implements ReservationStockUseCase {
                 reservationBuy);
 
         try {
-            notificationPort.send("trade-payment-buy",
-                    NotificationOutDto.BuyDto
+            messageQueuePort.send("trade-payment-buy",
+                    MessageQueueOutDto.BuyDto
                             .builder()
                             .price(reservationBuy.getPrice() * reservationBuy.getAmount())
                             .uuid(uuid)
@@ -180,9 +180,26 @@ public class ReservationStockService implements ReservationStockUseCase {
                         StockUseCase.StockBuySaleDto.class);
 
                 MemberStock memberStock = MemberStock.saleMemberStock(memberStockOutDto, data);
-                saveMemberStockPort.SaveMemberStock(memberStock);
-                saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
+                MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
+                StockLog savedLog = saveStockLogPort.saveStockLog(
+                        modelMapper.map(data, StockLog.class),
                         StockLogStatus.RESERVATION_SALE, data.getUuid());
+
+                try{
+                    messageQueuePort.send(
+                            "trade-payment-sale",
+                            MessageQueueOutDto.BuyDto
+                                    .builder()
+                                    .uuid(reservationSale.getUuid())
+                                    .price(reservationSale.getPrice() * reservationSale.getAmount())
+                                    .build()).get();
+                } catch(Exception e){
+                    log.error("Kafka Messaging 도중, 오류 발생");
+                    saveMemberStockPort.SaveMemberStock(
+                            createBeforeSaleMemberStock(savedData, memberStockOutDto));
+                    saveStockLogPort.deleteStockLog(savedLog);
+                    throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
+                }
             }
         }
         else{
@@ -231,6 +248,26 @@ public class ReservationStockService implements ReservationStockUseCase {
                 .amount(receiveStockBuyDto.getAmount())
                 .stockCode(receiveStockBuyDto.getStockCode())
                 .stockName(receiveStockBuyDto.getStockName())
+                .build();
+    }
+
+    /**
+     * 메세지 발행 중, 실패 시, 트랜잭션 롤백 진행을 위한 Domain 생성 매서드
+     *
+     * @param savedData
+     * @param beforeData
+     * @return
+     */
+    private MemberStock createBeforeSaleMemberStock(MemberStock savedData,
+            MemberStockOutDto beforeData) {
+        return MemberStock.builder()
+                .id(savedData.getId())
+                .uuid(beforeData.getUuid())
+                .amount(beforeData.getAmount())
+                .totalPrice(beforeData.getTotalPrice())
+                .totalAmount(beforeData.getTotalAmount())
+                .stockCode(beforeData.getStockCode())
+                .stockName(beforeData.getStockName())
                 .build();
     }
 }
