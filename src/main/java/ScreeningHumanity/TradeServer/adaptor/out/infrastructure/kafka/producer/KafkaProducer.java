@@ -13,6 +13,11 @@ public class KafkaProducer implements NotificationPort {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
+    /**
+     *
+     * @param kafkaTopic = receiver
+     * @param dto = data
+     */
     @Override
     public void send(String KafkaTopic, Object dto) {
         ObjectMapper mapper = new ObjectMapper();

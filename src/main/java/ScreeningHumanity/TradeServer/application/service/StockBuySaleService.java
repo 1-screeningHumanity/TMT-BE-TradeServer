@@ -2,7 +2,9 @@ package ScreeningHumanity.TradeServer.application.service;
 
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.NotificationOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.NotificationPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
 import ScreeningHumanity.TradeServer.domain.MemberStock;
@@ -23,6 +25,7 @@ public class StockBuySaleService implements StockUseCase {
     private final SaveMemberStockPort saveMemberStockPort;
     private final LoadMemberStockPort loadMemberStockPort;
     private final SaveStockLogPort saveStockLogPort;
+    private final NotificationPort notificationPort;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -36,6 +39,14 @@ public class StockBuySaleService implements StockUseCase {
             saveMemberStockPort.SaveMemberStock(memberStock);
             saveStockLogPort.saveStockLog(modelMapper.map(receiveStockBuyDto, StockLog.class),
                     StockLogStatus.BUY, uuid);
+
+            notificationPort.send("trade-payment-buy",
+                    NotificationOutDto.BuyDto
+                            .builder()
+                            .price(memberStock.getTotalPrice())
+                            .uuid(uuid)
+                            .build());
+
             return;
         }
         MemberStock memberStock = MemberStock.updateMemberStock(loadMemberStockDto.get(),
@@ -43,6 +54,13 @@ public class StockBuySaleService implements StockUseCase {
         saveMemberStockPort.SaveMemberStock(memberStock);
         saveStockLogPort.saveStockLog(modelMapper.map(receiveStockBuyDto, StockLog.class),
                 StockLogStatus.BUY, uuid);
+
+        notificationPort.send("trade-payment-buy",
+                NotificationOutDto.BuyDto
+                        .builder()
+                        .price(receiveStockBuyDto.getPrice() * receiveStockBuyDto.getAmount())
+                        .uuid(uuid)
+                        .build());
     }
 
     @Transactional
