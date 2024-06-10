@@ -61,7 +61,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                             .builder()
                             .price(reservationBuy.getPrice() * reservationBuy.getAmount())
                             .uuid(uuid)
-                            .build());
+                            .build()).get();
         }catch (Exception e){
             log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
             saveReservationStockPort.DeleteReservationBuyStock(savedData.getId());

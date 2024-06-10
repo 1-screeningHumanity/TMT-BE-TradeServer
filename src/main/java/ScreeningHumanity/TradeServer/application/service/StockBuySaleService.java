@@ -49,7 +49,7 @@ public class StockBuySaleService implements StockUseCase {
                                 .builder()
                                 .price(memberStock.getTotalPrice())
                                 .uuid(uuid)
-                                .build());
+                                .build()).get();
             } catch (Exception e) {
                 log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
                 saveMemberStockPort.DeleteMemberStock(savedData);
@@ -71,9 +71,9 @@ public class StockBuySaleService implements StockUseCase {
                             .builder()
                             .price(receiveStockBuyDto.getPrice() * receiveStockBuyDto.getAmount())
                             .uuid(uuid)
-                            .build());
+                            .build()).get();
         } catch (Exception e) {
-            log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
+            log.error("Kafka Messaging 도중, 오류 발생");
             saveMemberStockPort.SaveMemberStock(
                     createBeforeBuyMemberStock(savedData, loadMemberStockDto.get()));
             saveStockLogPort.deleteStockLog(savedLog);
@@ -106,7 +106,7 @@ public class StockBuySaleService implements StockUseCase {
                                     * receiveStockSaleDto.getAmount())
                             .build()).get();
         } catch (Exception e) {
-            log.info("Kafka Messaging 도중, 오류 발생");
+            log.error("Kafka Messaging 도중, 오류 발생");
             saveMemberStockPort.SaveMemberStock(
                     createBeforeSaleMemberStock(savedData, loadMemberStockDto));
             saveStockLogPort.deleteStockLog(savedLog);
