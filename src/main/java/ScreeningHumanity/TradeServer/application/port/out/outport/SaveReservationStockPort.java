@@ -12,7 +12,7 @@ public interface SaveReservationStockPort {
 
     void DeleteReservationSaleStock(Long saleId);
 
-    void DeleteReservationBuyStock(Long buyId);
+    ReservationBuy DeleteReservationBuyStock(Long buyId);
 
     void concludeBuyStock(List<ReservationBuy> buyList);
 

@@ -62,7 +62,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                             .price(reservationBuy.getPrice() * reservationBuy.getAmount())
                             .uuid(uuid)
                             .build()).get();
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
             saveReservationStockPort.DeleteReservationBuyStock(savedData.getId());
             throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_FAIL_ERROR);
@@ -70,9 +70,8 @@ public class ReservationStockService implements ReservationStockUseCase {
     }
 
     /**
-     * 예약 매도 Fail의 경우
-     * 1. 예약 매도할 주식 정보가 없는 경우.
-     * 2. 예약 매도할 수량보다 가지고 있는 수량이 적은 경우.
+     * 예약 매도 Fail의 경우 1. 예약 매도할 주식 정보가 없는 경우. 2. 예약 매도할 수량보다 가지고 있는 수량이 적은 경우.
+     *
      * @param stockBuyDto
      * @param uuid
      */
@@ -83,7 +82,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                 uuid, stockBuyDto.getStockCode()).orElseThrow(
                 () -> new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
 
-        if(loadStockData.getAmount() < stockBuyDto.getAmount()){
+        if (loadStockData.getAmount() < stockBuyDto.getAmount()) {
             throw new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_AMOUNT_ERROR);
         }
 
@@ -122,7 +121,22 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Transactional
     @Override
     public void DeleteBuyStock(Long saleId) {
-        saveReservationStockPort.DeleteReservationBuyStock(saleId);
+        ReservationBuy findData = saveReservationStockPort.DeleteReservationBuyStock(
+                saleId);
+
+        try {
+            messageQueuePort.send(
+                    "trade-payment-reservationcancel",
+                    MessageQueueOutDto.ReservationBuyCancelDto
+                            .builder()
+                            .uuid(findData.getUuid())
+                            .price(findData.getPrice() * findData.getAmount())
+                            .build());
+        } catch (Exception e) {
+            log.error("Kafka Messaging 도중, 오류 발생");
+            saveReservationStockPort.SaveReservationBuyStock(findData);
+            throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_CANCEL_FAIL_ERROR);
+        }
     }
 
     @Transactional
@@ -157,8 +171,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                 saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
                         StockLogStatus.BUY, data.getUuid());
             }
-        }
-        else{
+        } else {
             //todo : 로직 확인용 else문, 나중에 삭제 필요.
             log.info("매칭되는 예약 매수가 없어 종료!");
         }
@@ -185,7 +198,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                         modelMapper.map(data, StockLog.class),
                         StockLogStatus.RESERVATION_SALE, data.getUuid());
 
-                try{
+                try {
                     messageQueuePort.send(
                             "trade-payment-sale",
                             MessageQueueOutDto.BuyDto
@@ -193,7 +206,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                                     .uuid(reservationSale.getUuid())
                                     .price(reservationSale.getPrice() * reservationSale.getAmount())
                                     .build()).get();
-                } catch(Exception e){
+                } catch (Exception e) {
                     log.error("Kafka Messaging 도중, 오류 발생");
                     saveMemberStockPort.SaveMemberStock(
                             createBeforeSaleMemberStock(savedData, memberStockOutDto));
@@ -201,8 +214,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                     throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
                 }
             }
-        }
-        else{
+        } else {
             //todo : 로직 확인용 else문, 나중에 삭제 필요.
             log.info("매칭되는 예약 매도가 없어 종료!");
         }

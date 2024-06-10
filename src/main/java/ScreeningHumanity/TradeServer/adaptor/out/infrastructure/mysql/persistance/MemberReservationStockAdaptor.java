@@ -48,11 +48,13 @@ public class MemberReservationStockAdaptor
     }
 
     @Override
-    public void DeleteReservationBuyStock(Long buyId) {
+    public ReservationBuy DeleteReservationBuyStock(Long buyId) {
         ReservationBuyEntity findResult = reservationBuyJpaRepository.findById(buyId).
                 orElseThrow(() -> new CustomException(
                         BaseResponseCode.DELETE_RESERVATION_BUY_STOCK_ERROR));
         reservationBuyJpaRepository.delete(findResult);
+
+        return ReservationBuyEntity.toDomainFrom(findResult);
     }
 
     /**

@@ -29,4 +29,14 @@ public class MessageQueueOutDto {
         @NotNull
         private Long price;
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class ReservationBuyCancelDto{
+        @NotNull
+        private String uuid;
+        @NotNull
+        private Long price;
+    }
 }
