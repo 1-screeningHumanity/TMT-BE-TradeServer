@@ -63,7 +63,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                             .uuid(uuid)
                             .build());
         }catch (Exception e){
-            //보상 트랜잭션
+            log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
             saveReservationStockPort.DeleteReservationBuyStock(savedData.getId());
             throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_FAIL_ERROR);
         }
