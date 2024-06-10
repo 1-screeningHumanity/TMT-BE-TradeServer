@@ -21,8 +21,15 @@ public class StockLogAdaptor implements SaveStockLogPort, LoadStockLogPort {
     private final ModelMapper modelMapper;
 
     @Override
-    public void saveStockLog(StockLog stockLog, StockLogStatus status, String uuid) {
-        stockLogJpaRepository.save(StockLogEntity.toEntityFrom(stockLog, status, uuid));
+    public StockLog saveStockLog(StockLog stockLog, StockLogStatus status, String uuid) {
+        StockLogEntity saveData = stockLogJpaRepository.save(
+                StockLogEntity.toEntityFrom(stockLog, status, uuid));
+        return StockLogEntity.toDomainFrom(saveData);
+    }
+
+    @Override
+    public void deleteStockLog(StockLog stockLog) {
+        stockLogJpaRepository.deleteById(stockLog.getId());
     }
 
     @Override

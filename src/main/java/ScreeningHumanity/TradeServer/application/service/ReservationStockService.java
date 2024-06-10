@@ -4,9 +4,11 @@ import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservationStockPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveReservationStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
@@ -38,6 +40,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveMemberStockPort saveMemberStockPort;
     private final LoadMemberStockPort loadMemberStockPort;
     private final SaveStockLogPort saveStockLogPort;
+    private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
 
     public static final String STATUS_BUY = "매수";
@@ -49,13 +52,26 @@ public class ReservationStockService implements ReservationStockUseCase {
 
         ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
 
-        saveReservationStockPort.SaveReservationBuyStock(reservationBuy);
+        ReservationBuy savedData = saveReservationStockPort.SaveReservationBuyStock(
+                reservationBuy);
+
+        try {
+            messageQueuePort.send("trade-payment-buy",
+                    MessageQueueOutDto.BuyDto
+                            .builder()
+                            .price(reservationBuy.getPrice() * reservationBuy.getAmount())
+                            .uuid(uuid)
+                            .build()).get();
+        } catch (Exception e) {
+            log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
+            saveReservationStockPort.DeleteReservationBuyStock(savedData.getId());
+            throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_FAIL_ERROR);
+        }
     }
 
     /**
-     * 예약 매도 Fail의 경우
-     * 1. 예약 매도할 주식 정보가 없는 경우.
-     * 2. 예약 매도할 수량보다 가지고 있는 수량이 적은 경우.
+     * 예약 매도 Fail의 경우 1. 예약 매도할 주식 정보가 없는 경우. 2. 예약 매도할 수량보다 가지고 있는 수량이 적은 경우.
+     *
      * @param stockBuyDto
      * @param uuid
      */
@@ -66,7 +82,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                 uuid, stockBuyDto.getStockCode()).orElseThrow(
                 () -> new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
 
-        if(loadStockData.getAmount() < stockBuyDto.getAmount()){
+        if (loadStockData.getAmount() < stockBuyDto.getAmount()) {
             throw new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_AMOUNT_ERROR);
         }
 
@@ -105,7 +121,22 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Transactional
     @Override
     public void DeleteBuyStock(Long saleId) {
-        saveReservationStockPort.DeleteReservationBuyStock(saleId);
+        ReservationBuy findData = saveReservationStockPort.DeleteReservationBuyStock(
+                saleId);
+
+        try {
+            messageQueuePort.send(
+                    "trade-payment-reservationcancel",
+                    MessageQueueOutDto.ReservationBuyCancelDto
+                            .builder()
+                            .uuid(findData.getUuid())
+                            .price(findData.getPrice() * findData.getAmount())
+                            .build());
+        } catch (Exception e) {
+            log.error("Kafka Messaging 도중, 오류 발생");
+            saveReservationStockPort.SaveReservationBuyStock(findData);
+            throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_CANCEL_FAIL_ERROR);
+        }
     }
 
     @Transactional
@@ -140,8 +171,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                 saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
                         StockLogStatus.BUY, data.getUuid());
             }
-        }
-        else{
+        } else {
             //todo : 로직 확인용 else문, 나중에 삭제 필요.
             log.info("매칭되는 예약 매수가 없어 종료!");
         }
@@ -163,12 +193,28 @@ public class ReservationStockService implements ReservationStockUseCase {
                         StockUseCase.StockBuySaleDto.class);
 
                 MemberStock memberStock = MemberStock.saleMemberStock(memberStockOutDto, data);
-                saveMemberStockPort.SaveMemberStock(memberStock);
-                saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
+                MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
+                StockLog savedLog = saveStockLogPort.saveStockLog(
+                        modelMapper.map(data, StockLog.class),
                         StockLogStatus.RESERVATION_SALE, data.getUuid());
+
+                try {
+                    messageQueuePort.send(
+                            "trade-payment-sale",
+                            MessageQueueOutDto.BuyDto
+                                    .builder()
+                                    .uuid(reservationSale.getUuid())
+                                    .price(reservationSale.getPrice() * reservationSale.getAmount())
+                                    .build()).get();
+                } catch (Exception e) {
+                    log.error("Kafka Messaging 도중, 오류 발생");
+                    saveMemberStockPort.SaveMemberStock(
+                            createBeforeSaleMemberStock(savedData, memberStockOutDto));
+                    saveStockLogPort.deleteStockLog(savedLog);
+                    throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
+                }
             }
-        }
-        else{
+        } else {
             //todo : 로직 확인용 else문, 나중에 삭제 필요.
             log.info("매칭되는 예약 매도가 없어 종료!");
         }
@@ -214,6 +260,26 @@ public class ReservationStockService implements ReservationStockUseCase {
                 .amount(receiveStockBuyDto.getAmount())
                 .stockCode(receiveStockBuyDto.getStockCode())
                 .stockName(receiveStockBuyDto.getStockName())
+                .build();
+    }
+
+    /**
+     * 메세지 발행 중, 실패 시, 트랜잭션 롤백 진행을 위한 Domain 생성 매서드
+     *
+     * @param savedData
+     * @param beforeData
+     * @return
+     */
+    private MemberStock createBeforeSaleMemberStock(MemberStock savedData,
+            MemberStockOutDto beforeData) {
+        return MemberStock.builder()
+                .id(savedData.getId())
+                .uuid(beforeData.getUuid())
+                .amount(beforeData.getAmount())
+                .totalPrice(beforeData.getTotalPrice())
+                .totalAmount(beforeData.getTotalAmount())
+                .stockCode(beforeData.getStockCode())
+                .stockName(beforeData.getStockName())
                 .build();
     }
 }

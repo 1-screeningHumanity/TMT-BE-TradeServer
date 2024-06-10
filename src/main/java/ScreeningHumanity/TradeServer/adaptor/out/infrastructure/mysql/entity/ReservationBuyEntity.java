@@ -50,4 +50,16 @@ public class ReservationBuyEntity extends BaseEntity {
                 .stockName(reservationBuy.getStockName())
                 .build();
     }
+
+    public static ReservationBuy toDomainFrom(ReservationBuyEntity reservationBuyEntity){
+        return ReservationBuy
+                .builder()
+                .id(reservationBuyEntity.getId())
+                .uuid(reservationBuyEntity.getUuid())
+                .amount(reservationBuyEntity.getAmount())
+                .price(reservationBuyEntity.getPrice())
+                .stockCode(reservationBuyEntity.getStockCode())
+                .stockName(reservationBuyEntity.getStockName())
+                .build();
+    }
 }

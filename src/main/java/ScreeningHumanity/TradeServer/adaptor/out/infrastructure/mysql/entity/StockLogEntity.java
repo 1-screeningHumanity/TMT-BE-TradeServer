@@ -58,4 +58,17 @@ public class StockLogEntity extends BaseEntity {
                 .stockName(stockLog.getStockName())
                 .build();
     }
+
+    public static StockLog toDomainFrom(StockLogEntity stockLogEntity){
+        return StockLog
+                .builder()
+                .id(stockLogEntity.getId())
+                .amount(stockLogEntity.getAmount())
+                .price(stockLogEntity.getPrice())
+                .status(stockLogEntity.getStatus())
+                .uuid(stockLogEntity.getUuid())
+                .stockCode(stockLogEntity.getStockCode())
+                .stockName(stockLogEntity.getStockName())
+                .build();
+    }
 }

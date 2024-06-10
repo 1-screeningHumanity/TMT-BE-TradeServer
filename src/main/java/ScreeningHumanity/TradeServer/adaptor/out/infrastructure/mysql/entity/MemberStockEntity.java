@@ -53,4 +53,17 @@ public class MemberStockEntity {
                 .stockName(memberStock.getStockName())
                 .build();
     }
+
+    public static MemberStock toDomainFrom(MemberStockEntity memberStockEntity){
+        return MemberStock
+                .builder()
+                .id(memberStockEntity.getId())
+                .uuid(memberStockEntity.getUuid())
+                .amount(memberStockEntity.getAmount())
+                .totalPrice(memberStockEntity.getTotalPrice())
+                .totalAmount(memberStockEntity.getTotalAmount())
+                .stockCode(memberStockEntity.getStockCode())
+                .stockName(memberStockEntity.getStockName())
+                .build();
+    }
 }
