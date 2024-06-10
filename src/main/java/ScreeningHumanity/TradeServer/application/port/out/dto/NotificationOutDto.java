@@ -20,4 +20,13 @@ public class NotificationOutDto {
         private Long price;
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class SaleDto{
+        @NotNull
+        private String uuid;
+        @NotNull
+        private Long price;
+    }
 }
