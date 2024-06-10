@@ -31,7 +31,8 @@ public enum BaseResponseCode {
     DELETE_RESERVATION_BUY_STOCK_ERROR(HttpStatus.BAD_REQUEST, false, 2003, "삭제할 예약 매도가 없습니다."),
 
     SALE_RESERVATION_STOCK_NOTFOUND_ERROR(HttpStatus.BAD_REQUEST, false, 2004, "예약 매도를 진행하는데 가지고 있는 주식 정보가 없습니다."),
-    SALE_RESERVATION_STOCK_AMOUNT_ERROR(HttpStatus.BAD_REQUEST, false, 2004, "예약 매도 수량이 보유 수량보다 많습니다."),
+    SALE_RESERVATION_STOCK_AMOUNT_ERROR(HttpStatus.BAD_REQUEST, false, 2005, "예약 매도 수량이 보유 수량보다 많습니다."),
+    BUY_RESERVATION_STOCK_FAIL_ERROR(HttpStatus.BAD_REQUEST, false, 2006, "예약 매수를 진행 중 문제가 발생하였습니다."),
 
     //공통 에러. 9000 ~ 9999
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, false, 9000, "서버 에러"),

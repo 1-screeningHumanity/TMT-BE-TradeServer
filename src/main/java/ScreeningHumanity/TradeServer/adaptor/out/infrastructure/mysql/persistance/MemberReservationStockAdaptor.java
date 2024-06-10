@@ -27,8 +27,11 @@ public class MemberReservationStockAdaptor
     private final ModelMapper modelMapper;
 
     @Override
-    public void SaveReservationBuyStock(ReservationBuy reservationBuy) {
-        reservationBuyJpaRepository.save(ReservationBuyEntity.toEntityFrom(reservationBuy));
+    public ReservationBuy SaveReservationBuyStock(ReservationBuy reservationBuy) {
+        ReservationBuyEntity saveData = reservationBuyJpaRepository.save(
+                ReservationBuyEntity.toEntityFrom(reservationBuy));
+
+        return ReservationBuyEntity.toDomainFrom(saveData);
     }
 
     @Override
@@ -45,8 +48,8 @@ public class MemberReservationStockAdaptor
     }
 
     @Override
-    public void DeleteReservationBuyStock(Long saleId) {
-        ReservationBuyEntity findResult = reservationBuyJpaRepository.findById(saleId).
+    public void DeleteReservationBuyStock(Long buyId) {
+        ReservationBuyEntity findResult = reservationBuyJpaRepository.findById(buyId).
                 orElseThrow(() -> new CustomException(
                         BaseResponseCode.DELETE_RESERVATION_BUY_STOCK_ERROR));
         reservationBuyJpaRepository.delete(findResult);

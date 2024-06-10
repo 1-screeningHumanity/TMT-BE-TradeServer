@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface SaveReservationStockPort {
 
-    void SaveReservationBuyStock(ReservationBuy reservationBuy);
+    ReservationBuy SaveReservationBuyStock(ReservationBuy reservationBuy);
 
     void SaveReservationSaleStock(ReservationSale reservationSale);
 
     void DeleteReservationSaleStock(Long saleId);
 
-    void DeleteReservationBuyStock(Long saleId);
+    void DeleteReservationBuyStock(Long buyId);
 
     void concludeBuyStock(List<ReservationBuy> buyList);
 

@@ -52,13 +52,21 @@ public class ReservationStockService implements ReservationStockUseCase {
 
         ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
 
-        saveReservationStockPort.SaveReservationBuyStock(reservationBuy);
-        notificationPort.send("trade-payment-buy",
-                NotificationOutDto.BuyDto
-                        .builder()
-                        .price(reservationBuy.getPrice() * reservationBuy.getAmount())
-                        .uuid(uuid)
-                        .build());
+        ReservationBuy savedData = saveReservationStockPort.SaveReservationBuyStock(
+                reservationBuy);
+
+        try {
+            notificationPort.send("trade-payment-buy",
+                    NotificationOutDto.BuyDto
+                            .builder()
+                            .price(reservationBuy.getPrice() * reservationBuy.getAmount())
+                            .uuid(uuid)
+                            .build());
+        }catch (Exception e){
+            //보상 트랜잭션
+            saveReservationStockPort.DeleteReservationBuyStock(savedData.getId());
+            throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_FAIL_ERROR);
+        }
     }
 
     /**
