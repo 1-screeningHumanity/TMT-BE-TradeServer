@@ -4,9 +4,11 @@ import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.NotificationOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservationStockPort;
+import ScreeningHumanity.TradeServer.application.port.out.outport.NotificationPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveReservationStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveStockLogPort;
@@ -38,6 +40,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveMemberStockPort saveMemberStockPort;
     private final LoadMemberStockPort loadMemberStockPort;
     private final SaveStockLogPort saveStockLogPort;
+    private final NotificationPort notificationPort;
     private final ModelMapper modelMapper;
 
     public static final String STATUS_BUY = "매수";
@@ -50,6 +53,12 @@ public class ReservationStockService implements ReservationStockUseCase {
         ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
 
         saveReservationStockPort.SaveReservationBuyStock(reservationBuy);
+        notificationPort.send("trade-payment-buy",
+                NotificationOutDto.BuyDto
+                        .builder()
+                        .price(reservationBuy.getPrice() * reservationBuy.getAmount())
+                        .uuid(uuid)
+                        .build());
     }
 
     /**
