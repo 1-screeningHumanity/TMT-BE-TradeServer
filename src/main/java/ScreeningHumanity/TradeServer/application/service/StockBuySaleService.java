@@ -55,6 +55,7 @@ public class StockBuySaleService implements StockUseCase {
                 log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
                 saveMemberStockPort.DeleteMemberStock(savedData);
                 saveStockLogPort.deleteStockLog(savedLogData);
+                throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
             }
 
             return;
@@ -78,6 +79,7 @@ public class StockBuySaleService implements StockUseCase {
             saveMemberStockPort.SaveMemberStock(
                     createBeforeBuyMemberStock(savedData, loadMemberStockDto.get()));
             saveStockLogPort.deleteStockLog(savedLog);
+            throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
         }
 
         //매수 완료 알람 Message 전달
