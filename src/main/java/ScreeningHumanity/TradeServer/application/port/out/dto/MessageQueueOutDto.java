@@ -1,6 +1,7 @@
 package ScreeningHumanity.TradeServer.application.port.out.dto;
 
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,8 @@ public class MessageQueueOutDto {
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class BuyDto{
+    public static class BuyDto {
+
         @NotNull
         private String uuid;
         @NotNull
@@ -23,7 +25,8 @@ public class MessageQueueOutDto {
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class SaleDto{
+    public static class SaleDto {
+
         @NotNull
         private String uuid;
         @NotNull
@@ -33,10 +36,29 @@ public class MessageQueueOutDto {
     @Getter
     @Builder
     @AllArgsConstructor
-    public static class ReservationBuyCancelDto{
+    public static class ReservationBuyCancelDto {
+
         @NotNull
         private String uuid;
         @NotNull
         private Long price;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    public static class TradeStockNotificationDto {
+
+        @NotNull
+        private String title;
+
+        @NotNull
+        private String body;
+
+        @NotNull
+        private String uuid;
+
+        @NotNull
+        private String notificationLogTime;
     }
 }
