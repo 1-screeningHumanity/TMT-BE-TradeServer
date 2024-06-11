@@ -116,7 +116,21 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Transactional
     @Override
     public void DeleteSaleStock(Long saleId) {
-        saveReservationStockPort.DeleteReservationSaleStock(saleId);
+        ReservationSale findData = saveReservationStockPort.DeleteReservationSaleStock(
+                saleId);
+
+        String bodyData =
+                "종목명 : " + findData.getStockName() + "\n"
+                        + "수량 : " + findData.getAmount() + "개\n"
+                        + "총 가격 : " + findData.getAmount() * findData.getPrice() + "원\n"
+                        + "예약 매도 취소 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("예약 매도 취소 완료")
+                .body(bodyData)
+                .uuid(findData.getUuid())
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
     }
 
     @Transactional
@@ -138,6 +152,19 @@ public class ReservationStockService implements ReservationStockUseCase {
             saveReservationStockPort.SaveReservationBuyStock(findData);
             throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_CANCEL_FAIL_ERROR);
         }
+
+        String bodyData =
+                "종목명 : " + findData.getStockName() + "\n"
+                        + "수량 : " + findData.getAmount() + "개\n"
+                        + "총 가격 : " + findData.getAmount() * findData.getPrice() + "원\n"
+                        + "예약 매수 취소 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("예약 매수 취소 완료")
+                .body(bodyData)
+                .uuid(findData.getUuid())
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
     }
 
     @Transactional
