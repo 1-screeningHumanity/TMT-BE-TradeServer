@@ -131,7 +131,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                             .builder()
                             .uuid(findData.getUuid())
                             .price(findData.getPrice() * findData.getAmount())
-                            .build());
+                            .build()).get();
         } catch (Exception e) {
             log.error("Kafka Messaging 도중, 오류 발생");
             saveReservationStockPort.SaveReservationBuyStock(findData);
