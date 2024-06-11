@@ -56,4 +56,4 @@ JWT:
   SECRET_KEY: sldkfjsoidfjwoeir12393012809vxcv89usdfkjn1203491iu0isdfl
 
 kafka:
-  bootstrap-server: ${KAFKA-SERVER}
+  bootstrap-server: ${KAFKA_SERVER}

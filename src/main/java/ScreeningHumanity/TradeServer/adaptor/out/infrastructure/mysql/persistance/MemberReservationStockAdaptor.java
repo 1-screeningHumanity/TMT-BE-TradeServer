@@ -40,11 +40,13 @@ public class MemberReservationStockAdaptor
     }
 
     @Override
-    public void DeleteReservationSaleStock(Long saleId) {
+    public ReservationSale DeleteReservationSaleStock(Long saleId) {
         ReservationSaleEntity findResult = reservationSaleJpaRepository.findById(saleId).
                 orElseThrow(() -> new CustomException(
                         BaseResponseCode.DELETE_RESERVATION_SALE_STOCK_ERROR));
         reservationSaleJpaRepository.delete(findResult);
+
+        return ReservationSaleEntity.toDomainFrom(findResult);
     }
 
     @Override

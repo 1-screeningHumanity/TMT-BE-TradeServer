@@ -12,6 +12,7 @@ import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,7 @@ public class StockBuySaleService implements StockUseCase {
                 log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
                 saveMemberStockPort.DeleteMemberStock(savedData);
                 saveStockLogPort.deleteStockLog(savedLogData);
+                throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
             }
 
             return;
@@ -77,7 +79,23 @@ public class StockBuySaleService implements StockUseCase {
             saveMemberStockPort.SaveMemberStock(
                     createBeforeBuyMemberStock(savedData, loadMemberStockDto.get()));
             saveStockLogPort.deleteStockLog(savedLog);
+            throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
         }
+
+        //매수 완료 알람 Message 전달
+        String bodyData =
+                "종목명 : " + receiveStockBuyDto.getStockName() + "\n"
+                        + "수량 : " + receiveStockBuyDto.getAmount() + "\n"
+                        + "총 가격 : " + receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()
+                        + "\n"
+                        + " 매수 체결 완료 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("매수 체결 완료")
+                .body(bodyData)
+                .uuid(uuid)
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
     }
 
     @Transactional
@@ -112,15 +130,30 @@ public class StockBuySaleService implements StockUseCase {
             saveStockLogPort.deleteStockLog(savedLog);
             throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
         }
+
+        String bodyData =
+                "종목명 : " + receiveStockSaleDto.getStockName() + "\n"
+                        + "수량 : " + receiveStockSaleDto.getAmount() + "\n"
+                        + "총 가격 : " + receiveStockSaleDto.getAmount() * receiveStockSaleDto.getPrice() + "\n"
+                        + " 매도 체결 완료 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("매도 체결 완료")
+                .body(bodyData)
+                .uuid(uuid)
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
     }
 
     /**
      * 메세지 발행 중, 실패 시, 트랜잭션 롤백 진행을 위한 Domain 생성 매서드
+     *
      * @param savedData
      * @param beforeData
      * @return
      */
-    private MemberStock createBeforeBuyMemberStock(MemberStock savedData, MemberStockOutDto beforeData){
+    private MemberStock createBeforeBuyMemberStock(MemberStock savedData,
+            MemberStockOutDto beforeData) {
         return MemberStock.builder()
                 .id(savedData.getId())
                 .uuid(beforeData.getUuid())
