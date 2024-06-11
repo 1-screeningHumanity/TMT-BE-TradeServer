@@ -19,6 +19,7 @@ import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -170,6 +171,20 @@ public class ReservationStockService implements ReservationStockUseCase {
                 saveMemberStockPort.SaveMemberStock(memberStock);
                 saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
                         StockLogStatus.BUY, data.getUuid());
+
+                //알림 메세지 전송
+                String bodyData =
+                        "종목명 : " + reservationBuy.getStockName() + "\n"
+                                + "수량 : " + reservationBuy.getAmount() + "개\n"
+                                + "총 가격 : " + reservationBuy.getAmount() * reservationBuy.getPrice() + "원\n"
+                                + "예약 매수 체결 완료 되었습니다.";
+                messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                        .builder()
+                        .title("예약 매수 체결 완료")
+                        .body(bodyData)
+                        .uuid(reservationBuy.getUuid())
+                        .notificationLogTime(LocalDateTime.now().toString())
+                        .build());
             }
         } else {
             //todo : 로직 확인용 else문, 나중에 삭제 필요.
@@ -213,6 +228,20 @@ public class ReservationStockService implements ReservationStockUseCase {
                     saveStockLogPort.deleteStockLog(savedLog);
                     throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
                 }
+
+                //알림 메세지 전송
+                String bodyData =
+                        "종목명 : " + reservationSale.getStockName() + "\n"
+                                + "수량 : " + reservationSale.getAmount() + "개\n"
+                                + "총 가격 : " + reservationSale.getAmount() * reservationSale.getPrice() + "원\n"
+                                + "예약 매도 체결 완료 되었습니다.";
+                messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                        .builder()
+                        .title("예약 매도 체결 완료")
+                        .body(bodyData)
+                        .uuid(reservationSale.getUuid())
+                        .notificationLogTime(LocalDateTime.now().toString())
+                        .build());
             }
         } else {
             //todo : 로직 확인용 else문, 나중에 삭제 필요.
@@ -232,7 +261,6 @@ public class ReservationStockService implements ReservationStockUseCase {
     private ReservationLogOutDto convertToSaleDto(ReservationSale sale) {
         ReservationLogOutDto dto = modelMapper.map(sale, ReservationLogOutDto.class);
 
-//        dto.setTime(sale.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         dto.setTotalPrice(String.valueOf(sale.getPrice() * sale.getAmount()));
         dto.setStatus(STATUS_SALE);
 
