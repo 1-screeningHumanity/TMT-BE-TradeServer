@@ -4,5 +4,7 @@ import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 
 public interface SaveStockLogPort {
-    void saveStockLog(StockLog stockLog, StockLogStatus status, String uuid);
+    StockLog saveStockLog(StockLog stockLog, StockLogStatus status, String uuid);
+
+    void deleteStockLog(StockLog stockLog);
 }

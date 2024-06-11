@@ -1,5 +1,6 @@
 package ScreeningHumanity.TradeServer.application.port.in.usecase;
 
+import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,8 @@ public interface ReservationStockUseCase {
     void DeleteSaleStock(Long saleId);
 
     void DeleteBuyStock(Long saleId);
+
+    void concludeStock(RealChartInputDto dto);
 
     @Getter
     @Builder
