@@ -1,5 +1,6 @@
 package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.kafka.producer;
 
+import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,5 +32,19 @@ public class KafkaProducer implements MessageQueuePort {
         }
 
         return kafkaTemplate.send(KafkaTopic, jsonInString);
+    }
+
+    @Override
+    public void sendNotification(MessageQueueOutDto.TradeStockNotificationDto data) {
+        String KafkaTopic = "trade-notification-alarm";
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonInString = "";
+        try {
+            jsonInString = mapper.writeValueAsString(data);
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
+
+        kafkaTemplate.send(KafkaTopic, jsonInString);
     }
 }
