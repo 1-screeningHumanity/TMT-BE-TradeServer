@@ -6,6 +6,7 @@ import ScreeningHumanity.TradeServer.application.port.out.outport.LoadStockLogPo
 import ScreeningHumanity.TradeServer.domain.StockLog;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -24,16 +25,20 @@ public class StockLogService implements StockLogUseCase {
     @Override
     public List<StockLogOutDto> LoadStockLog(Pageable pageable, String uuid) {
         List<StockLog> stockLogs = loadStockLogPort.loadStockLog(pageable, uuid);
+
+        AtomicLong indexId = new AtomicLong(1L);
         return stockLogs.stream()
-                .map(this::convertToDto)
+                .map(stockLog -> convertToDto(stockLog, indexId.getAndIncrement()))
                 .collect(Collectors.toList());
+
     }
 
-    private StockLogOutDto convertToDto(StockLog stockLog) {
+    private StockLogOutDto convertToDto(StockLog stockLog, Long indexId) {
         StockLogOutDto dto = modelMapper.map(stockLog, StockLogOutDto.class);
 
         dto.setTime(stockLog.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         dto.setTotalPrice(String.valueOf(stockLog.getPrice() * stockLog.getAmount()));
+        dto.setIndexId(indexId);
 
         return dto;
     }
