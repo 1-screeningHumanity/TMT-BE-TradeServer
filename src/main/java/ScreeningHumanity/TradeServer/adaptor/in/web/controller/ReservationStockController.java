@@ -41,7 +41,9 @@ public class ReservationStockController {
     ) {
         reservationStockUseCase.BuyStock(
                 modelMapper.map(requestStockBuyVo, ReservationStockUseCase.StockBuySaleDto.class),
-                decodingToken.getUuid(accessToken));
+                decodingToken.getUuid(accessToken),
+                accessToken
+        );
         return new BaseResponse<>();
     }
 

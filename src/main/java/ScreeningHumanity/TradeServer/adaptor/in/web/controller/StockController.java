@@ -37,7 +37,8 @@ public class StockController {
         log.info("매수 API 실행");
         stockUseCase.BuyStock(
                 modelMapper.map(requestStockBuyVo, StockUseCase.StockBuySaleDto.class),
-                decodingToken.getUuid(accessToken));
+                decodingToken.getUuid(accessToken),
+                accessToken);
         return new BaseResponse<>();
     }
 
