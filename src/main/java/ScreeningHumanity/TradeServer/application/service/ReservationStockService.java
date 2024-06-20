@@ -1,5 +1,7 @@
 package ScreeningHumanity.TradeServer.application.service;
 
+import ScreeningHumanity.TradeServer.adaptor.in.feignclient.PaymentFeignClient;
+import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
 import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
@@ -18,6 +20,7 @@ import ScreeningHumanity.TradeServer.domain.ReservationSale;
 import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
+import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,13 +46,20 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveStockLogPort saveStockLogPort;
     private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
+    private final PaymentFeignClient paymentFeignClient;
 
     public static final String STATUS_BUY = "매수";
     public static final String STATUS_SALE = "매도";
 
     @Transactional
     @Override
-    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid) {
+    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid, String accessToken) {
+
+        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClient.searchMemberCash(accessToken);
+
+        if(findData.result().getWon() < receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()){
+            throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
+        }
 
         ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
 

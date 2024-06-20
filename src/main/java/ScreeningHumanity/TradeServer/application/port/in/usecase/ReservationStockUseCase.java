@@ -11,7 +11,7 @@ import lombok.ToString;
 
 public interface ReservationStockUseCase {
 
-    void BuyStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
+    void BuyStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid, String accessToken);
 
     void SaleStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
 
