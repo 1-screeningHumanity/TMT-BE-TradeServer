@@ -9,7 +9,7 @@ import lombok.ToString;
 
 public interface StockUseCase {
 
-    void BuyStock(StockBuySaleDto stockBuyDto, String uuid);
+    void BuyStock(StockBuySaleDto stockBuyDto, String uuid, String accessToken);
     void SaleStock(StockBuySaleDto stockSaleDto, String uuid);
 
     @Getter

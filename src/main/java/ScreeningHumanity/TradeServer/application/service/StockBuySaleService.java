@@ -1,5 +1,7 @@
 package ScreeningHumanity.TradeServer.application.service;
 
+import ScreeningHumanity.TradeServer.adaptor.in.feignclient.PaymentFeignClient;
+import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
@@ -11,6 +13,7 @@ import ScreeningHumanity.TradeServer.domain.MemberStock;
 import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
+import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -30,10 +33,17 @@ public class StockBuySaleService implements StockUseCase {
     private final SaveStockLogPort saveStockLogPort;
     private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
+    private final PaymentFeignClient paymentFeignClient;
 
     @Transactional
     @Override
-    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid) {
+    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid, String accessToken) {
+
+        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClient.searchMemberCash(accessToken);
+        if(findData.result().getWon() < receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()){
+            throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
+        }
+
         Optional<MemberStockOutDto> loadMemberStockDto = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
                 uuid, receiveStockBuyDto.getStockCode());
 

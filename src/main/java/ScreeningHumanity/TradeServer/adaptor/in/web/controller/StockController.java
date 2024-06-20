@@ -8,6 +8,7 @@ import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -31,13 +32,14 @@ public class StockController {
     @Operation(summary = "매수 api", description = "매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> stockBuy(
-            @RequestBody RequestVo.StockBuy requestStockBuyVo,
+            @Valid @RequestBody RequestVo.StockBuy requestStockBuyVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         log.info("매수 API 실행");
         stockUseCase.BuyStock(
                 modelMapper.map(requestStockBuyVo, StockUseCase.StockBuySaleDto.class),
-                decodingToken.getUuid(accessToken));
+                decodingToken.getUuid(accessToken),
+                accessToken);
         return new BaseResponse<>();
     }
 

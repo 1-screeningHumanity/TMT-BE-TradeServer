@@ -1,5 +1,7 @@
 package ScreeningHumanity.TradeServer.application.service;
 
+import ScreeningHumanity.TradeServer.adaptor.in.feignclient.PaymentFeignClient;
+import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
 import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
@@ -18,6 +20,7 @@ import ScreeningHumanity.TradeServer.domain.ReservationSale;
 import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
+import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,13 +46,20 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveStockLogPort saveStockLogPort;
     private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
+    private final PaymentFeignClient paymentFeignClient;
 
     public static final String STATUS_BUY = "매수";
     public static final String STATUS_SALE = "매도";
 
     @Transactional
     @Override
-    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid) {
+    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid, String accessToken) {
+
+        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClient.searchMemberCash(accessToken);
+
+        if(findData.result().getWon() < receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()){
+            throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
+        }
 
         ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
 
@@ -173,8 +183,6 @@ public class ReservationStockService implements ReservationStockUseCase {
         List<ReservationBuy> matchBuyStock = loadReservationStockPort.findMatchBuyStock(dto);
         List<ReservationSale> matchSaleStock = loadReservationStockPort.findMatchSaleStock(dto);
 
-        log.info("================================");
-        log.info("실시간 데이터 기반 하여 주식 매수 실시");
         if (!matchBuyStock.isEmpty()) {
             log.info("예약 매수 start = {}", matchBuyStock.get(0).getStockName());
 
@@ -213,13 +221,8 @@ public class ReservationStockService implements ReservationStockUseCase {
                         .notificationLogTime(LocalDateTime.now().toString())
                         .build());
             }
-        } else {
-            //todo : 로직 확인용 else문, 나중에 삭제 필요.
-            log.info("매칭되는 예약 매수가 없어 종료!");
         }
 
-        log.info("================================");
-        log.info("실시간 데이터 기반 하여 주식 매도 실시");
         if (!matchSaleStock.isEmpty()) {
             log.info("예약 매도 start = {}", matchSaleStock.get(0).getStockName());
             saveReservationStockPort.concludeSaleStock(matchSaleStock);
@@ -270,9 +273,6 @@ public class ReservationStockService implements ReservationStockUseCase {
                         .notificationLogTime(LocalDateTime.now().toString())
                         .build());
             }
-        } else {
-            //todo : 로직 확인용 else문, 나중에 삭제 필요.
-            log.info("매칭되는 예약 매도가 없어 종료!");
         }
     }
 

@@ -57,3 +57,7 @@ JWT:
 
 kafka:
   bootstrap-server: ${KAFKA_SERVER}
+
+FEIGN_CLIENT:
+  PAYMENT:
+    URL: ${PAYMENT_URL}
