@@ -4,9 +4,11 @@ import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -122,6 +124,24 @@ public class ExceptionAdvice {
                 BaseResponseCode.NO_HANDLER_FOUND_ERROR.isSuccess(),
                 BaseResponseCode.NO_HANDLER_FOUND_ERROR.getMessage(),
                 BaseResponseCode.NO_HANDLER_FOUND_ERROR.getCode(),
+                null);
+
+        return new ResponseEntity<>(response, response.httpStatus());
+    }
+
+    /**
+     * @return
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> noHandlerException(MethodArgumentNotValidException e) {
+
+        String message = Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage();
+
+        BaseResponse<?> response = new BaseResponse<>(
+                BaseResponseCode.METHOD_NOT_ALLOW_ERROR.getHttpStatus(),
+                BaseResponseCode.METHOD_NOT_ALLOW_ERROR.isSuccess(),
+                message,
+                BaseResponseCode.METHOD_NOT_ALLOW_ERROR.getCode(),
                 null);
 
         return new ResponseEntity<>(response, response.httpStatus());

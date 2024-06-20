@@ -9,6 +9,7 @@ import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class ReservationStockController {
     @Operation(summary = "예약 매수 api", description = "예약 매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> ReservationStockBuy(
-            @RequestBody RequestVo.StockBuy requestStockBuyVo,
+            @Valid @RequestBody RequestVo.StockBuy requestStockBuyVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         reservationStockUseCase.BuyStock(
