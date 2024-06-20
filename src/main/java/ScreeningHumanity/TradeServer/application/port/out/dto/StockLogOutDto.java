@@ -1,12 +1,12 @@
 package ScreeningHumanity.TradeServer.application.port.out.dto;
 
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Builder
@@ -15,6 +15,8 @@ import lombok.ToString;
 @Setter
 public class StockLogOutDto {
 
+    @JsonProperty(value = "id")
+    private Long indexId;
     private String time;
     private String stockName;
     private String price;

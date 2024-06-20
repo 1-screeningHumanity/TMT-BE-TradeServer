@@ -173,8 +173,6 @@ public class ReservationStockService implements ReservationStockUseCase {
         List<ReservationBuy> matchBuyStock = loadReservationStockPort.findMatchBuyStock(dto);
         List<ReservationSale> matchSaleStock = loadReservationStockPort.findMatchSaleStock(dto);
 
-        log.info("================================");
-        log.info("실시간 데이터 기반 하여 주식 매수 실시");
         if (!matchBuyStock.isEmpty()) {
             log.info("예약 매수 start = {}", matchBuyStock.get(0).getStockName());
 
@@ -213,13 +211,8 @@ public class ReservationStockService implements ReservationStockUseCase {
                         .notificationLogTime(LocalDateTime.now().toString())
                         .build());
             }
-        } else {
-            //todo : 로직 확인용 else문, 나중에 삭제 필요.
-            log.info("매칭되는 예약 매수가 없어 종료!");
         }
 
-        log.info("================================");
-        log.info("실시간 데이터 기반 하여 주식 매도 실시");
         if (!matchSaleStock.isEmpty()) {
             log.info("예약 매도 start = {}", matchSaleStock.get(0).getStockName());
             saveReservationStockPort.concludeSaleStock(matchSaleStock);
@@ -270,9 +263,6 @@ public class ReservationStockService implements ReservationStockUseCase {
                         .notificationLogTime(LocalDateTime.now().toString())
                         .build());
             }
-        } else {
-            //todo : 로직 확인용 else문, 나중에 삭제 필요.
-            log.info("매칭되는 예약 매도가 없어 종료!");
         }
     }
 
