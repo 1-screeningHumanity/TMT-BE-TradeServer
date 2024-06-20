@@ -34,6 +34,8 @@ public class KafkaConsumerController {
             dto = mapper.readValue(kafkaMessage, new TypeReference<>() {
             });
 
+            log.info("time = {}", dto.getDate());
+
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
