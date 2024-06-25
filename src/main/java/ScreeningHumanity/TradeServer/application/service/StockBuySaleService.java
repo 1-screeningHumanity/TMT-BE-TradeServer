@@ -119,6 +119,12 @@ public class StockBuySaleService implements StockUseCase {
 
         MemberStock memberStock = MemberStock.saleMemberStock(loadMemberStockDto,
                 receiveStockSaleDto);
+
+        //판매 후, 보유주식이 0이 되면, TotalPrice 와 TotalAmount reset 필요.
+        if(memberStock.getAmount() == 0L){
+            memberStock = MemberStock.resetTotalData(memberStock);
+        }
+
         MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
         StockLog savedLog = saveStockLogPort.saveStockLog(
                 modelMapper.map(receiveStockSaleDto, StockLog.class),
