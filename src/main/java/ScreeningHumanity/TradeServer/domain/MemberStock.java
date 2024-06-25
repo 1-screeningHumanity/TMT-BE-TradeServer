@@ -76,4 +76,23 @@ public class MemberStock {
                 .stockName(stockBuyDto.getStockName())
                 .build();
     }
+
+    /**
+     * 매수 완료 후, 가지고 있는 보유 주식이 0이 될 경우,
+     * totalPrice 와 totalAmount 를 Reset 시킨다.
+     * @param memberStock
+     * @return
+     */
+    public static MemberStock resetTotalData(MemberStock memberStock){
+        return MemberStock
+                .builder()
+                .id(memberStock.getId())
+                .uuid(memberStock.getUuid())
+                .amount(memberStock.getAmount())
+                .totalPrice(0L)
+                .totalAmount(0L)
+                .stockCode(memberStock.getStockCode())
+                .stockName(memberStock.getStockName())
+                .build();
+    }
 }
