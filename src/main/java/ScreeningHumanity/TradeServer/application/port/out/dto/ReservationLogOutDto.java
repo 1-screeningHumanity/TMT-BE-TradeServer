@@ -27,4 +27,5 @@ public class ReservationLogOutDto {
     private String totalPrice;
     private String status;
 
+    private String stockCode;
 }
