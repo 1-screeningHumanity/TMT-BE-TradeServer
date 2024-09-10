@@ -1,11 +1,11 @@
 package ScreeningHumanity.TradeServer.application.service;
 
-import ScreeningHumanity.TradeServer.adaptor.in.feignclient.PaymentFeignClient;
 import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
 import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
+import ScreeningHumanity.TradeServer.application.port.in.usecase.PaymentUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.StockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
@@ -46,7 +46,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveStockLogPort saveStockLogPort;
     private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
-    private final PaymentFeignClient paymentFeignClient;
+    private final PaymentUseCase paymentUseCase;
 
     public static final String STATUS_BUY = "매수";
     public static final String STATUS_SALE = "매도";
@@ -55,7 +55,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Override
     public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid, String accessToken) {
 
-        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClient.searchMemberCash(accessToken);
+        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClientInterface.searchMemberCash(accessToken);
 
         if(findData.result().getWon() < receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()){
             throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
@@ -89,7 +89,7 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Transactional
     @Override
     public void SaleStock(StockBuySaleDto stockBuyDto, String uuid) {
-        MemberStockOutDto loadStockData = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
+        StockOutDto loadStockData = loadMemberStockPort.loadMemberStock(
                 uuid, stockBuyDto.getStockCode()).orElseThrow(
                 () -> new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
 
@@ -189,21 +189,21 @@ public class ReservationStockService implements ReservationStockUseCase {
             saveReservationStockPort.concludeBuyStock(matchBuyStock);
 
             for (ReservationBuy reservationBuy : matchBuyStock) {
-                Optional<MemberStockOutDto> memberStockOutDto = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
+                Optional<StockOutDto> memberStockOutDto = loadMemberStockPort.loadMemberStock(
                         reservationBuy.getUuid(), reservationBuy.getStockCode());
 
                 StockUseCase.StockBuySaleDto data = modelMapper.map(reservationBuy,
                         StockUseCase.StockBuySaleDto.class);
                 if (memberStockOutDto.isEmpty()) {
                     MemberStock memberStock = MemberStock.createMemberStock(data, data.getUuid());
-                    saveMemberStockPort.SaveMemberStock(memberStock);
+                    saveMemberStockPort.saveMemberStock(memberStock);
                     saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
                             StockLogStatus.RESERVATION_BUY, data.getUuid());
                     return;
                 }
                 MemberStock memberStock = MemberStock.updateMemberStock(memberStockOutDto.get(),
                         data);
-                saveMemberStockPort.SaveMemberStock(memberStock);
+                saveMemberStockPort.saveMemberStock(memberStock);
                 saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
                         StockLogStatus.BUY, data.getUuid());
 
@@ -228,8 +228,8 @@ public class ReservationStockService implements ReservationStockUseCase {
             saveReservationStockPort.concludeSaleStock(matchSaleStock);
 
             for (ReservationSale reservationSale : matchSaleStock) {
-                MemberStockOutDto memberStockOutDto = loadMemberStockPort
-                        .LoadMemberStockByUuidAndStockCode(reservationSale.getUuid(),
+                StockOutDto memberStockOutDto = loadMemberStockPort
+                        .loadMemberStock(reservationSale.getUuid(),
                                 reservationSale.getStockCode())
                         .orElseThrow(() -> new CustomException(
                                 BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
@@ -244,7 +244,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                     memberStock = MemberStock.resetTotalData(memberStock);
                 }
 
-                MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
+                MemberStock savedData = saveMemberStockPort.saveMemberStock(memberStock);
                 StockLog savedLog = saveStockLogPort.saveStockLog(
                         modelMapper.map(data, StockLog.class),
                         StockLogStatus.RESERVATION_SALE, data.getUuid());
@@ -259,7 +259,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                                     .build()).get();
                 } catch (Exception e) {
                     log.error("Kafka Messaging 도중, 오류 발생");
-                    saveMemberStockPort.SaveMemberStock(
+                    saveMemberStockPort.saveMemberStock(
                             createBeforeSaleMemberStock(savedData, memberStockOutDto));
                     saveStockLogPort.deleteStockLog(savedLog);
                     throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
@@ -332,7 +332,7 @@ public class ReservationStockService implements ReservationStockUseCase {
      * @return
      */
     private MemberStock createBeforeSaleMemberStock(MemberStock savedData,
-            MemberStockOutDto beforeData) {
+            StockOutDto beforeData) {
         return MemberStock.builder()
                 .id(savedData.getId())
                 .uuid(beforeData.getUuid())

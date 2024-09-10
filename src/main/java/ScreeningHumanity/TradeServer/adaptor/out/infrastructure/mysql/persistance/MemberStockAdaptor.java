@@ -2,7 +2,7 @@ package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.persistan
 
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity.MemberStockEntity;
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.repository.MemberStockJpaRepository;
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.StockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveMemberStockPort;
 import ScreeningHumanity.TradeServer.domain.MemberStock;
@@ -19,14 +19,24 @@ public class MemberStockAdaptor implements SaveMemberStockPort, LoadMemberStockP
     private final ModelMapper modelMapper;
 
     @Override
-    public Optional<MemberStockOutDto> LoadMemberStockByUuidAndStockCode(String uuid, String stockCode) {
-        Optional<MemberStockEntity> loadMemberStock = memberStockJpaRepository.findAllByUuidAndStockCode(
-                uuid, stockCode);
-        return Optional.ofNullable(modelMapper.map(loadMemberStock, MemberStockOutDto.class));
+    public Optional<MemberStock> loadMemberStock(String uuid, String stockCode) {
+        Optional<MemberStockEntity> loadData =
+                memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode);
+
+        return Optional.ofNullable(MemberStock
+                .builder()
+                .id(loadData.get().getId())
+                .uuid(loadData.get().getUuid())
+                .amount(loadData.get().getAmount())
+                .totalPrice(loadData.get().getTotalPrice())
+                .totalAmount(loadData.get().getTotalAmount())
+                .stockCode(loadData.get().getStockCode())
+                .stockName(loadData.get().getStockName())
+                .build());
     }
 
     @Override
-    public MemberStock SaveMemberStock(MemberStock memberStock) {
+    public MemberStock saveMemberStock(MemberStock memberStock) {
         MemberStockEntity saveData = memberStockJpaRepository.save(
                 MemberStockEntity.toEntityFrom(memberStock));
 

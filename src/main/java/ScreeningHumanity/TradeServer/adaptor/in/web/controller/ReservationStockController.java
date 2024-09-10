@@ -2,7 +2,7 @@ package ScreeningHumanity.TradeServer.adaptor.in.web.controller;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
-import ScreeningHumanity.TradeServer.adaptor.in.web.vo.RequestVo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
@@ -37,7 +37,7 @@ public class ReservationStockController {
     @Operation(summary = "예약 매수 api", description = "예약 매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> ReservationStockBuy(
-            @Valid @RequestBody RequestVo.StockBuy requestStockBuyVo,
+            @Valid @RequestBody RequestDto.StockBuy requestStockBuyVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         reservationStockUseCase.BuyStock(
@@ -51,7 +51,7 @@ public class ReservationStockController {
     @Operation(summary = "예약 매도 api", description = "예약 매도 API 호출")
     @PostMapping("/sale")
     public BaseResponse<Void> ReservationStockSale(
-            @RequestBody RequestVo.StockSale requestStockSaleVo,
+            @RequestBody RequestDto.StockSale requestStockSaleVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         reservationStockUseCase.SaleStock(
