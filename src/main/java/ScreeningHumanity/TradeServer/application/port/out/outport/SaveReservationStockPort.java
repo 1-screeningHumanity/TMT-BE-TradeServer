@@ -2,19 +2,15 @@ package ScreeningHumanity.TradeServer.application.port.out.outport;
 
 import ScreeningHumanity.TradeServer.domain.ReservationBuy;
 import ScreeningHumanity.TradeServer.domain.ReservationSale;
-import java.util.List;
+import java.util.Optional;
 
 public interface SaveReservationStockPort {
 
-    ReservationBuy SaveReservationBuyStock(ReservationBuy reservationBuy);
+    void saveReservationBuyStock(ReservationBuy reservationBuy);
 
-    void SaveReservationSaleStock(ReservationSale reservationSale);
+    void saveReservationSaleStock(ReservationSale reservationSale);
 
-    ReservationSale DeleteReservationSaleStock(Long saleId);
+    Optional<ReservationSale> deleteReservationSaleStock(Long saleId);
 
-    ReservationBuy DeleteReservationBuyStock(Long buyId);
-
-    void concludeBuyStock(List<ReservationBuy> buyList);
-
-    void concludeSaleStock(List<ReservationSale> buyList);
+    Optional<ReservationBuy> deleteReservationBuyStock(Long buyId);
 }

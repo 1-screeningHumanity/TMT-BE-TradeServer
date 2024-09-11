@@ -30,7 +30,6 @@ public class StockLogService implements StockLogUseCase {
         return stockLogs.stream()
                 .map(stockLog -> convertToDto(stockLog, indexId.getAndIncrement()))
                 .collect(Collectors.toList());
-
     }
 
     private StockLogOutDto convertToDto(StockLog stockLog, Long indexId) {

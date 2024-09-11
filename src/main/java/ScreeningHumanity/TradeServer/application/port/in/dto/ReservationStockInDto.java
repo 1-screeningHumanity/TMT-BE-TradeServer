@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-public class StockInDto {
+public class ReservationStockInDto {
 
     @Getter
     @Builder
@@ -34,5 +34,16 @@ public class StockInDto {
         private Long amount;
         private String uuid;
         private String stockName;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class RealTimeStockInfo {
+        public String stockCode;
+        public Long price;
+        public String date;
     }
 }

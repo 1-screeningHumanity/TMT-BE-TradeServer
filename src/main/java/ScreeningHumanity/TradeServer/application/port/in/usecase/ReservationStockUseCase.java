@@ -1,39 +1,20 @@
 package ScreeningHumanity.TradeServer.application.port.in.usecase;
 
-import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
-import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.ReservationStockInDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationStockOutDto;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 public interface ReservationStockUseCase {
 
-    void BuyStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid, String accessToken);
+    void buyStock(ReservationStockInDto.Buy dto, String uuid, String accessToken);
 
-    void SaleStock(ReservationStockUseCase.StockBuySaleDto stockBuyDto, String uuid);
+    void saleStock(ReservationStockInDto.Sale dto, String uuid);
 
-    List<ReservationLogOutDto> BuySaleLog(String uuid);
+    void doReservationStock(ReservationStockInDto.RealTimeStockInfo dto);
 
-    void DeleteSaleStock(Long saleId);
+    List<ReservationStockOutDto.Logs> buySaleLog(String uuid);
 
-    void DeleteBuyStock(Long saleId);
+    void cancelReservationSaleStock(Long saleId, boolean messageFlag);
 
-    void concludeStock(RealChartInputDto dto);
-
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    class StockBuySaleDto {
-
-        private String stockCode;
-        private Long price;
-        private Long amount;
-        private String uuid;
-        private String stockName;
-    }
+    void cancelReservationBuyStock(Long saleId, boolean messageFlag);
 }

@@ -1,6 +1,5 @@
 package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity;
 
-import ScreeningHumanity.TradeServer.domain.ReservationSale;
 import ScreeningHumanity.TradeServer.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,6 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table(name = "reservation_sale")
 public class ReservationSaleEntity extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,28 +38,4 @@ public class ReservationSaleEntity extends BaseEntity {
 
     @Column(name = "stock_name", nullable = false)
     private String stockName;
-
-    public static ReservationSaleEntity toEntityFrom(ReservationSale reservationSale){
-        return ReservationSaleEntity
-                .builder()
-                .id(reservationSale.getId())
-                .uuid(reservationSale.getUuid())
-                .amount(reservationSale.getAmount())
-                .price(reservationSale.getPrice())
-                .stockCode(reservationSale.getStockCode())
-                .stockName(reservationSale.getStockName())
-                .build();
-    }
-
-    public static ReservationSale toDomainFrom(ReservationSaleEntity reservationSaleEntity){
-        return ReservationSale
-                .builder()
-                .id(reservationSaleEntity.getId())
-                .uuid(reservationSaleEntity.getUuid())
-                .amount(reservationSaleEntity.getAmount())
-                .price(reservationSaleEntity.getPrice())
-                .stockCode(reservationSaleEntity.getStockCode())
-                .stockName(reservationSaleEntity.getStockName())
-                .build();
-    }
 }

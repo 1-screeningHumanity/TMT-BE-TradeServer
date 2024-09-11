@@ -1,6 +1,5 @@
 package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity;
 
-import ScreeningHumanity.TradeServer.domain.MemberStock;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -40,30 +39,4 @@ public class MemberStockEntity {
 
     @Column(name = "stock_name", nullable = false)
     private String stockName;
-
-    public static MemberStockEntity toEntityFrom(MemberStock memberStock){
-        return MemberStockEntity
-                .builder()
-                .id(memberStock.getId())
-                .uuid(memberStock.getUuid())
-                .amount(memberStock.getAmount())
-                .totalPrice(memberStock.getTotalPrice())
-                .totalAmount(memberStock.getTotalAmount())
-                .stockCode(memberStock.getStockCode())
-                .stockName(memberStock.getStockName())
-                .build();
-    }
-
-    public static MemberStock toDomainFrom(MemberStockEntity memberStockEntity){
-        return MemberStock
-                .builder()
-                .id(memberStockEntity.getId())
-                .uuid(memberStockEntity.getUuid())
-                .amount(memberStockEntity.getAmount())
-                .totalPrice(memberStockEntity.getTotalPrice())
-                .totalAmount(memberStockEntity.getTotalAmount())
-                .stockCode(memberStockEntity.getStockCode())
-                .stockName(memberStockEntity.getStockName())
-                .build();
-    }
 }
