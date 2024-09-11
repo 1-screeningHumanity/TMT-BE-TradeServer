@@ -1,9 +1,9 @@
 package ScreeningHumanity.TradeServer.application.service;
 
-import ScreeningHumanity.TradeServer.adaptor.in.feignclient.PaymentFeignClient;
-import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto.WonInfo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.StockInDto;
+import ScreeningHumanity.TradeServer.application.port.in.usecase.PaymentUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
@@ -13,10 +13,8 @@ import ScreeningHumanity.TradeServer.domain.MemberStock;
 import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
-import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -32,125 +30,103 @@ public class StockBuySaleService implements StockUseCase {
     private final LoadMemberStockPort loadMemberStockPort;
     private final SaveStockLogPort saveStockLogPort;
     private final MessageQueuePort messageQueuePort;
+    private final PaymentUseCase paymentUseCase;
     private final ModelMapper modelMapper;
-    private final PaymentFeignClient paymentFeignClient;
 
     @Transactional
     @Override
-    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid, String accessToken) {
+    public void saleStock(StockInDto.Sale saleDto, String uuid) {
 
-        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClient.searchMemberCash(accessToken);
-        if(findData.result().getWon() < receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()){
-            throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
+        //기존 데이터 찾기
+        MemberStock findData = loadMemberStockPort.loadMemberStock(uuid, saleDto.getStockCode())
+                .orElseThrow(() -> new CustomException(BaseResponseCode.SALE_STOCK_NOT_EXIST_ERROR));
+
+        //매도 진행
+        MemberStock newData = saleMemberStock(saleDto, findData);
+        saveMemberStockPort.saveMemberStock(newData);
+
+        //판매 로그 등록
+        saveStockLogPort.saveStockLog(
+                modelMapper.map(saleDto, StockLog.class), StockLogStatus.SALE, uuid);
+
+        //Payment 서버에 Cash 차감 요청
+        if (Boolean.FALSE.equals(sendSaleMessageUpdateCash(saleDto, uuid))) {
+            throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
         }
 
-        Optional<MemberStockOutDto> loadMemberStockDto = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
-                uuid, receiveStockBuyDto.getStockCode());
-
-        if (loadMemberStockDto.isEmpty()) {
-            MemberStock memberStock = MemberStock.createMemberStock(receiveStockBuyDto, uuid);
-            MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
-            StockLog savedLogData = saveStockLogPort.saveStockLog(
-                    modelMapper.map(receiveStockBuyDto, StockLog.class),
-                    StockLogStatus.BUY, uuid);
-
-            try {
-                messageQueuePort.send("trade-payment-buy",
-                        MessageQueueOutDto.BuyDto
-                                .builder()
-                                .price(memberStock.getTotalPrice())
-                                .uuid(uuid)
-                                .build()).get();
-            } catch (Exception e) {
-                log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
-                saveMemberStockPort.DeleteMemberStock(savedData);
-                saveStockLogPort.deleteStockLog(savedLogData);
-                throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
-            }
-
-            return;
-        }
-        MemberStock memberStock = MemberStock.updateMemberStock(loadMemberStockDto.get(),
-                receiveStockBuyDto);
-        MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
-        StockLog savedLog = saveStockLogPort.saveStockLog(
-                modelMapper.map(receiveStockBuyDto, StockLog.class),
-                StockLogStatus.BUY, uuid);
-
-        try {
-            messageQueuePort.send("trade-payment-buy",
-                    MessageQueueOutDto.BuyDto
-                            .builder()
-                            .price(receiveStockBuyDto.getPrice() * receiveStockBuyDto.getAmount())
-                            .uuid(uuid)
-                            .build()).get();
-        } catch (Exception e) {
-            log.error("Kafka Messaging 도중, 오류 발생");
-            saveMemberStockPort.SaveMemberStock(
-                    createBeforeBuyMemberStock(savedData, loadMemberStockDto.get()));
-            saveStockLogPort.deleteStockLog(savedLog);
-            throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
-        }
-
-        //매수 완료 알람 Message 전달
-        String bodyData =
-                "종목명 : " + receiveStockBuyDto.getStockName() + "\n"
-                        + "수량 : " + receiveStockBuyDto.getAmount() + "\n"
-                        + "총 가격 : " + receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()
-                        + "\n"
-                        + " 매수 체결 완료 되었습니다.";
-        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
-                .builder()
-                .title("매수 체결 완료")
-                .body(bodyData)
-                .uuid(uuid)
-                .notificationLogTime(LocalDateTime.now().toString())
-                .build());
+        //Notification 서버에 알림 전달
+        sendSaleNotification(saleDto, uuid);
     }
 
     @Transactional
     @Override
-    public void SaleStock(StockBuySaleDto receiveStockSaleDto, String uuid) {
-        MemberStockOutDto loadMemberStockDto =
-                loadMemberStockPort
-                        .LoadMemberStockByUuidAndStockCode(uuid, receiveStockSaleDto.getStockCode())
-                        .orElseThrow(() -> new CustomException(
-                                BaseResponseCode.SALE_STOCK_NOT_EXIST_ERROR));
+    public void buyStock(StockInDto.Buy buyDto, String uuid, String accessToken) {
 
-        MemberStock memberStock = MemberStock.saleMemberStock(loadMemberStockDto,
-                receiveStockSaleDto);
-
-        //판매 후, 보유주식이 0이 되면, TotalPrice 와 TotalAmount reset 필요.
-        if(memberStock.getAmount() == 0L){
-            memberStock = MemberStock.resetTotalData(memberStock);
+        //현재 회원의 Cash 검증
+        if (Boolean.FALSE.equals(isMemberCashSufficient(buyDto, accessToken))) {
+            throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
         }
 
-        MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
-        StockLog savedLog = saveStockLogPort.saveStockLog(
-                modelMapper.map(receiveStockSaleDto, StockLog.class),
-                StockLogStatus.SALE, uuid);
+        //회원의 주식 정보 불러오기
+        //없을경우, 초기화 객체 생성
+        MemberStock loadData = loadMemberStockPort.loadMemberStock(uuid,
+                buyDto.getStockCode()).orElseGet(() -> createEmptyMemberStock(buyDto, uuid));
 
+        //매수 진행
+        MemberStock newData = buyMemberStock(buyDto, loadData);
+        saveMemberStockPort.saveMemberStock(newData);
+
+        //로그 등록
+        saveStockLogPort.saveStockLog(
+                modelMapper.map(buyDto, StockLog.class), StockLogStatus.BUY, uuid);
+
+        //Payment 서버에 Cash 차감 요청
+        if (Boolean.FALSE.equals(sendBuyMessageUpdateCash(buyDto, uuid))) {
+            throw new CustomException(BaseResponseCode.BUY_STOCK_FAIL_ERROR);
+        }
+
+        //Notification 서버에 알림 전달
+        sendBuyNotification(buyDto, uuid);
+    }
+
+    private Boolean sendBuyMessageUpdateCash(StockInDto.Buy dto, String uuid) {
+        try {
+            messageQueuePort.send("trade-payment-buy",
+                    MessageQueueOutDto.BuyDto
+                            .builder()
+                            .price(dto.getPrice() * dto.getAmount())
+                            .uuid(uuid)
+                            .build()).get();
+            return true;
+        } catch (Exception e) {
+            log.error("[일반 매수] 진행 중, 오류 발생-1");
+            return false;
+        }
+    }
+
+    private Boolean sendSaleMessageUpdateCash(StockInDto.Sale dto, String uuid) {
         try {
             messageQueuePort.send(
                     "trade-payment-sale",
                     MessageQueueOutDto.BuyDto
                             .builder()
                             .uuid(uuid)
-                            .price(receiveStockSaleDto.getPrice()
-                                    * receiveStockSaleDto.getAmount())
+                            .price(dto.getPrice() * dto.getAmount())
                             .build()).get();
+            return true;
         } catch (Exception e) {
-            log.error("Kafka Messaging 도중, 오류 발생");
-            saveMemberStockPort.SaveMemberStock(
-                    createBeforeSaleMemberStock(savedData, loadMemberStockDto));
-            saveStockLogPort.deleteStockLog(savedLog);
-            throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
+            log.error("[일반 매도] 진행 중, 오류 발생-1");
+            return false;
         }
+    }
 
+    private void sendSaleNotification(StockInDto.Sale dto, String uuid) {
         String bodyData =
-                "종목명 : " + receiveStockSaleDto.getStockName() + "\n"
-                        + "수량 : " + receiveStockSaleDto.getAmount() + "\n"
-                        + "총 가격 : " + receiveStockSaleDto.getAmount() * receiveStockSaleDto.getPrice() + "\n"
+                "종목명 : " + dto.getStockName() + "\n"
+                        + "수량 : " + dto.getAmount() + "\n"
+                        + "총 가격 : "
+                        + dto.getAmount() * dto.getPrice()
+                        + "\n"
                         + " 매도 체결 완료 되었습니다.";
         messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
                 .builder()
@@ -161,43 +137,81 @@ public class StockBuySaleService implements StockUseCase {
                 .build());
     }
 
-    /**
-     * 메세지 발행 중, 실패 시, 트랜잭션 롤백 진행을 위한 Domain 생성 매서드
-     *
-     * @param savedData
-     * @param beforeData
-     * @return
-     */
-    private MemberStock createBeforeBuyMemberStock(MemberStock savedData,
-            MemberStockOutDto beforeData) {
-        return MemberStock.builder()
-                .id(savedData.getId())
-                .uuid(beforeData.getUuid())
-                .amount(beforeData.getAmount())
-                .totalPrice(beforeData.getTotalPrice())
-                .totalAmount(beforeData.getTotalAmount())
-                .stockCode(beforeData.getStockCode())
-                .stockName(beforeData.getStockName())
+    private void sendBuyNotification(StockInDto.Buy dto, String uuid) {
+        //매수 완료 알람 Message 전달
+        String bodyData =
+                "종목명 : " + dto.getStockName() + "\n"
+                        + "수량 : " + dto.getAmount() + "\n"
+                        + "총 가격 : " + dto.getAmount() * dto.getPrice()
+                        + "\n"
+                        + " 매수 체결 완료 되었습니다.";
+
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("매수 체결 완료")
+                .body(bodyData)
+                .uuid(uuid)
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
+    }
+
+    private MemberStock buyMemberStock(StockInDto.Buy dto, MemberStock memberStock) {
+
+        Long totalPrice = dto.getPrice() * dto.getAmount();
+        Long newAmount = memberStock.getAmount() + dto.getAmount();
+        Long newTotalPrice = memberStock.getTotalPrice() + totalPrice;
+        Long newTotalAmount = memberStock.getTotalAmount() + dto.getAmount();
+
+        return MemberStock
+                .builder()
+                .id(memberStock.getId())
+                .uuid(memberStock.getUuid())
+                .amount(newAmount)
+                .totalPrice(newTotalPrice)
+                .totalAmount(newTotalAmount)
+                .stockCode(memberStock.getStockCode())
+                .stockName(memberStock.getStockName())
                 .build();
     }
 
-    /**
-     * 메세지 발행 중, 실패 시, 트랜잭션 롤백 진행을 위한 Domain 생성 매서드
-     *
-     * @param savedData
-     * @param beforeData
-     * @return
-     */
-    private MemberStock createBeforeSaleMemberStock(MemberStock savedData,
-            MemberStockOutDto beforeData) {
-        return MemberStock.builder()
-                .id(savedData.getId())
-                .uuid(beforeData.getUuid())
-                .amount(beforeData.getAmount())
-                .totalPrice(beforeData.getTotalPrice())
-                .totalAmount(beforeData.getTotalAmount())
-                .stockCode(beforeData.getStockCode())
-                .stockName(beforeData.getStockName())
+    private MemberStock saleMemberStock(StockInDto.Sale saleDto, MemberStock findData) {
+        long targetAmount = findData.getAmount() - saleDto.getAmount();
+
+        if(targetAmount < 0){
+            throw new CustomException(BaseResponseCode.SALE_STOCK_NEGATIVE_TARGET_ERROR);
+        }
+
+        return MemberStock
+                .builder()
+                .id(findData.getId())
+                .uuid(findData.getUuid())
+                .amount(targetAmount)
+                .totalPrice(targetAmount == 0 ? 0 : findData.getTotalPrice())
+                .totalAmount(targetAmount == 0 ? 0 : findData.getTotalAmount())
+                .stockCode(findData.getStockCode())
+                .stockName(findData.getStockName())
                 .build();
+    }
+
+    private MemberStock createEmptyMemberStock(StockInDto.Buy dto, String uuid) {
+        return MemberStock
+                .builder()
+                .id(null)
+                .uuid(uuid)
+                .amount(0L)
+                .totalPrice(0L)
+                .totalAmount(0L)
+                .stockCode(dto.getStockCode())
+                .stockName(dto.getStockName())
+                .build();
+    }
+
+    private boolean isMemberCashSufficient(StockInDto.Buy buyDto, String accessToken) {
+        WonInfo findData = paymentUseCase.searchMemberCash(accessToken);
+        Long totalPrice = buyDto.getAmount() * buyDto.getPrice();
+        if (findData.getWon() < totalPrice) {
+            return false;
+        }
+        return true;
     }
 }

@@ -2,9 +2,10 @@ package ScreeningHumanity.TradeServer.adaptor.in.web.controller;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
-import ScreeningHumanity.TradeServer.adaptor.in.web.vo.RequestVo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.ReservationStockInDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
-import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationStockOutDto;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,11 +38,11 @@ public class ReservationStockController {
     @Operation(summary = "예약 매수 api", description = "예약 매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> ReservationStockBuy(
-            @Valid @RequestBody RequestVo.StockBuy requestStockBuyVo,
+            @Valid @RequestBody RequestDto.StockReservationBuy requestDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        reservationStockUseCase.BuyStock(
-                modelMapper.map(requestStockBuyVo, ReservationStockUseCase.StockBuySaleDto.class),
+        reservationStockUseCase.buyStock(
+                modelMapper.map(requestDto, ReservationStockInDto.Buy.class),
                 decodingToken.getUuid(accessToken),
                 accessToken
         );
@@ -51,21 +52,21 @@ public class ReservationStockController {
     @Operation(summary = "예약 매도 api", description = "예약 매도 API 호출")
     @PostMapping("/sale")
     public BaseResponse<Void> ReservationStockSale(
-            @RequestBody RequestVo.StockSale requestStockSaleVo,
+            @RequestBody RequestDto.StockSale requestStockSaleVo,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        reservationStockUseCase.SaleStock(
-                modelMapper.map(requestStockSaleVo, ReservationStockUseCase.StockBuySaleDto.class),
+        reservationStockUseCase.saleStock(
+                modelMapper.map(requestStockSaleVo, ReservationStockInDto.Sale.class),
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>();
     }
 
     @Operation(summary = "예약 매도/매수 조회 api", description = "예약 매도/매수 조회 API 호출")
     @GetMapping("/trade-lists")
-    public BaseResponse<List<ReservationLogOutDto>> ReservationStockLog(
+    public BaseResponse<List<ReservationStockOutDto.Logs>> ReservationStockLog(
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        List<ReservationLogOutDto> result = reservationStockUseCase.BuySaleLog(
+        List<ReservationStockOutDto.Logs> result = reservationStockUseCase.buySaleLog(
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>(result);
     }
@@ -75,7 +76,7 @@ public class ReservationStockController {
     public BaseResponse<Void> ReservationDeleteSaleStock(
             @PathVariable Long id
     ) {
-        reservationStockUseCase.DeleteSaleStock(id);
+        reservationStockUseCase.cancelReservationSaleStock(id, true);
         return new BaseResponse<>();
     }
 
@@ -84,7 +85,7 @@ public class ReservationStockController {
     public BaseResponse<Void> ReservationDeleteBuyStock(
             @PathVariable Long id
     ) {
-        reservationStockUseCase.DeleteBuyStock(id);
+        reservationStockUseCase.cancelReservationBuyStock(id, true);
         return new BaseResponse<>();
     }
 }

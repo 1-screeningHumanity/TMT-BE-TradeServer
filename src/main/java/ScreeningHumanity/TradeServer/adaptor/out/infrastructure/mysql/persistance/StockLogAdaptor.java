@@ -28,11 +28,6 @@ public class StockLogAdaptor implements SaveStockLogPort, LoadStockLogPort {
     }
 
     @Override
-    public void deleteStockLog(StockLog stockLog) {
-        stockLogJpaRepository.deleteById(stockLog.getId());
-    }
-
-    @Override
     public List<StockLog> loadStockLog(Pageable pageable, String uuid) {
         List<StockLogEntity> stockLogByPageable = stockLogJpaRepository.findStockLogByPageable(pageable, uuid);
          return stockLogByPageable.stream()

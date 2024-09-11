@@ -157,7 +157,7 @@ public class ExceptionAdvice {
         BaseResponse<?> response = new BaseResponse<>(
                 BaseResponseCode.INTERNAL_SERVER_ERROR.getHttpStatus(),
                 BaseResponseCode.INTERNAL_SERVER_ERROR.isSuccess(),
-                BaseResponseCode.INTERNAL_SERVER_ERROR.getMessage(),
+                e.getMessage(),
                 BaseResponseCode.INTERNAL_SERVER_ERROR.getCode(),
                 null);
 

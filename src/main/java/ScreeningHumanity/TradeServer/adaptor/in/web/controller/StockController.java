@@ -2,7 +2,8 @@ package ScreeningHumanity.TradeServer.adaptor.in.web.controller;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
-import ScreeningHumanity.TradeServer.adaptor.in.web.vo.RequestVo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.StockInDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
@@ -32,12 +33,11 @@ public class StockController {
     @Operation(summary = "매수 api", description = "매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> stockBuy(
-            @Valid @RequestBody RequestVo.StockBuy requestStockBuyVo,
+            @Valid @RequestBody RequestDto.StockBuy requestStockBuyDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        log.info("매수 API 실행");
-        stockUseCase.BuyStock(
-                modelMapper.map(requestStockBuyVo, StockUseCase.StockBuySaleDto.class),
+        stockUseCase.buyStock(
+                modelMapper.map(requestStockBuyDto, StockInDto.Buy.class),
                 decodingToken.getUuid(accessToken),
                 accessToken);
         return new BaseResponse<>();
@@ -46,11 +46,11 @@ public class StockController {
     @Operation(summary = "매도 api", description = "매도 API 호출")
     @PostMapping("/sale")
     public BaseResponse<Void> stockSale(
-            @RequestBody RequestVo.StockSale requestStockSaleVo,
+            @Valid @RequestBody RequestDto.StockSale requestStockSaleDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        stockUseCase.SaleStock(
-                modelMapper.map(requestStockSaleVo, StockUseCase.StockBuySaleDto.class),
+        stockUseCase.saleStock(
+                modelMapper.map(requestStockSaleDto, StockInDto.Sale.class),
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>();
     }

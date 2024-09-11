@@ -1,13 +1,11 @@
 package ScreeningHumanity.TradeServer.application.service;
 
-import ScreeningHumanity.TradeServer.adaptor.in.feignclient.PaymentFeignClient;
-import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
-import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto.WonInfo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.ReservationStockInDto;
+import ScreeningHumanity.TradeServer.application.port.in.usecase.PaymentUseCase;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
-import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.dto.MessageQueueOutDto;
-import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationLogOutDto;
+import ScreeningHumanity.TradeServer.application.port.out.dto.ReservationStockOutDto;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadMemberStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservationStockPort;
 import ScreeningHumanity.TradeServer.application.port.out.outport.MessageQueuePort;
@@ -20,13 +18,11 @@ import ScreeningHumanity.TradeServer.domain.ReservationSale;
 import ScreeningHumanity.TradeServer.domain.StockLog;
 import ScreeningHumanity.TradeServer.domain.StockLogStatus;
 import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
-import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,77 +42,66 @@ public class ReservationStockService implements ReservationStockUseCase {
     private final SaveStockLogPort saveStockLogPort;
     private final MessageQueuePort messageQueuePort;
     private final ModelMapper modelMapper;
-    private final PaymentFeignClient paymentFeignClient;
+    private final PaymentUseCase paymentUseCase;
 
     public static final String STATUS_BUY = "매수";
     public static final String STATUS_SALE = "매도";
 
     @Transactional
     @Override
-    public void BuyStock(StockBuySaleDto receiveStockBuyDto, String uuid, String accessToken) {
+    public void buyStock(ReservationStockInDto.Buy dto, String uuid, String accessToken) {
 
-        BaseResponse<RequestVo.WonInfo> findData = paymentFeignClient.searchMemberCash(accessToken);
-
-        if(findData.result().getWon() < receiveStockBuyDto.getAmount() * receiveStockBuyDto.getPrice()){
+        //검증
+        if (Boolean.FALSE.equals(isMemberCashSufficient(dto, accessToken))) {
             throw new CustomException(BaseResponseCode.BUY_STOCK_NOT_ENOUGH_WON);
         }
 
-        ReservationBuy reservationBuy = createReservationBuyStock(receiveStockBuyDto, uuid);
+        //예약 매수 등록
+        ReservationBuy reservationBuy = createReservationBuyStock(dto, uuid);
+        saveReservationStockPort.saveReservationBuyStock(reservationBuy);
 
-        ReservationBuy savedData = saveReservationStockPort.SaveReservationBuyStock(
-                reservationBuy);
-
-        try {
-            messageQueuePort.send("trade-payment-buy",
-                    MessageQueueOutDto.BuyDto
-                            .builder()
-                            .price(reservationBuy.getPrice() * reservationBuy.getAmount())
-                            .uuid(uuid)
-                            .build()).get();
-        } catch (Exception e) {
-            log.error("Kafka 연결 확인 필요. 메세지 발행 실패");
-            saveReservationStockPort.DeleteReservationBuyStock(savedData.getId());
+        //Payment 서버에 Cash 차감 요청
+        if (Boolean.FALSE.equals(sendReservationBuyMessageUpdateCash(dto, uuid))) {
             throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_FAIL_ERROR);
         }
     }
 
-    /**
-     * 예약 매도 Fail의 경우 1. 예약 매도할 주식 정보가 없는 경우. 2. 예약 매도할 수량보다 가지고 있는 수량이 적은 경우.
-     *
-     * @param stockBuyDto
-     * @param uuid
-     */
     @Transactional
     @Override
-    public void SaleStock(StockBuySaleDto stockBuyDto, String uuid) {
-        MemberStockOutDto loadStockData = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
-                uuid, stockBuyDto.getStockCode()).orElseThrow(
-                () -> new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
+    public void saleStock(ReservationStockInDto.Sale dto, String uuid) {
 
-        if (loadStockData.getAmount() < stockBuyDto.getAmount()) {
-            throw new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_AMOUNT_ERROR);
-        }
+        //기존 데이터 찾기
+        MemberStock findData = loadMemberStockPort.loadMemberStock(uuid, dto.getStockCode())
+                .orElseThrow(() -> new CustomException(
+                        BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
 
-        ReservationSale reservationSaleStock = createReservationSaleStock(stockBuyDto, uuid);
+        //예약 매도 등록
+        ReservationSale newData = createReservationSaleStock(dto, findData);
+        saveReservationStockPort.saveReservationSaleStock(newData);
+    }
 
-        saveReservationStockPort.SaveReservationSaleStock(reservationSaleStock);
+    @Transactional
+    @Override
+    public void doReservationStock(ReservationStockInDto.RealTimeStockInfo dto) {
+        doReservationBuyStock(dto);
+        doReservationSaleStock(dto);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<ReservationLogOutDto> BuySaleLog(String uuid) {
+    public List<ReservationStockOutDto.Logs> buySaleLog(String uuid) {
         List<ReservationBuy> reservationBuys = loadReservationStockPort.loadReservationBuy(uuid);
         List<ReservationSale> reservationSales = loadReservationStockPort.loadReservationSale(uuid);
 
-        List<ReservationLogOutDto> result = reservationBuys.stream()
+        List<ReservationStockOutDto.Logs> result = reservationBuys.stream()
                 .map(this::convertToBuyDto)
                 .collect(Collectors.toList());
 
         result.addAll(reservationSales.stream()
                 .map(this::convertToSaleDto)
-                .collect(Collectors.toList()));
+                .toList());
 
-        result.sort(Comparator.comparing(ReservationLogOutDto::getCreatedAt).reversed());
+        result.sort(Comparator.comparing(ReservationStockOutDto.Logs::getCreatedAt).reversed());
         result.forEach(
                 m -> m.setTime(m.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
 
@@ -125,44 +110,97 @@ public class ReservationStockService implements ReservationStockUseCase {
 
     @Transactional
     @Override
-    public void DeleteSaleStock(Long saleId) {
-        ReservationSale findData = saveReservationStockPort.DeleteReservationSaleStock(
-                saleId);
+    public void cancelReservationSaleStock(Long saleId, boolean messageFlag) {
+        //id로 삭제 진행
+        ReservationSale findData = saveReservationStockPort.deleteReservationSaleStock(
+                saleId).orElseThrow(
+                () -> new CustomException(BaseResponseCode.DELETE_RESERVATION_SALE_STOCK_ERROR));
 
-        String bodyData =
-                "종목명 : " + findData.getStockName() + "\n"
-                        + "수량 : " + findData.getAmount() + "개\n"
-                        + "총 가격 : " + findData.getAmount() * findData.getPrice() + "원\n"
-                        + "예약 매도 취소 되었습니다.";
-        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
-                .builder()
-                .title("예약 매도 취소 완료")
-                .body(bodyData)
-                .uuid(findData.getUuid())
-                .notificationLogTime(LocalDateTime.now().toString())
-                .build());
+        //취소 알림 전송
+        if (Boolean.TRUE.equals(messageFlag)) {
+            sendCancelReservationSaleNotification(findData);
+        }
     }
 
     @Transactional
     @Override
-    public void DeleteBuyStock(Long saleId) {
-        ReservationBuy findData = saveReservationStockPort.DeleteReservationBuyStock(
-                saleId);
+    public void cancelReservationBuyStock(Long saleId, boolean messageFlag) {
+        //id로 삭제 진행
+        ReservationBuy findData = saveReservationStockPort.deleteReservationBuyStock(saleId)
+                .orElseThrow(() ->
+                        new CustomException(BaseResponseCode.DELETE_RESERVATION_BUY_STOCK_ERROR));
 
-        try {
-            messageQueuePort.send(
-                    "trade-payment-reservationcancel",
-                    MessageQueueOutDto.ReservationBuyCancelDto
-                            .builder()
-                            .uuid(findData.getUuid())
-                            .price(findData.getPrice() * findData.getAmount())
-                            .build()).get();
-        } catch (Exception e) {
-            log.error("Kafka Messaging 도중, 오류 발생");
-            saveReservationStockPort.SaveReservationBuyStock(findData);
+        //보유 Cash Update Message 전송
+        if (Boolean.FALSE.equals(sendReservationBuyCancelMessageUpdateCash(findData))) {
             throw new CustomException(BaseResponseCode.BUY_RESERVATION_STOCK_CANCEL_FAIL_ERROR);
         }
 
+        //취소 알림 전송
+        if (Boolean.TRUE.equals(messageFlag)) {
+            sendCancelReservationBuyNotification(findData);
+        }
+    }
+
+    private void doReservationSaleStock(ReservationStockInDto.RealTimeStockInfo dto) {
+        List<ReservationSale> matchSaleStockList = loadReservationStockPort.findMatchSaleStock(
+                dto.getStockCode(), dto.getPrice());
+        if (!matchSaleStockList.isEmpty()) {
+            for (ReservationSale matchSaleStock : matchSaleStockList) {
+
+                MemberStock newData = saleMemberStock(matchSaleStock);
+                saveMemberStockPort.saveMemberStock(newData);
+                cancelReservationSaleStock(matchSaleStock.getId(), false);
+
+                //로그 등록
+                saveStockLogPort.saveStockLog(
+                        modelMapper.map(matchSaleStock, StockLog.class),
+                        StockLogStatus.RESERVATION_SALE,
+                        matchSaleStock.getUuid());
+
+                //Payment 서버에 Cash 차감 요청
+                if (Boolean.FALSE.equals(sendSaleMessageUpdateCash(
+                        matchSaleStock.getUuid(),
+                        matchSaleStock.getAmount() * matchSaleStock.getPrice()))) {
+                    throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
+                }
+
+                //Notification 서버에 알림 전달
+                sendSaleNotification(
+                        matchSaleStock.getStockName(),
+                        matchSaleStock.getAmount(),
+                        matchSaleStock.getPrice(),
+                        matchSaleStock.getUuid());
+            }
+        }
+    }
+
+    private void doReservationBuyStock(ReservationStockInDto.RealTimeStockInfo dto) {
+        List<ReservationBuy> matchBuyStockList = loadReservationStockPort.findMatchBuyStock(dto.getStockCode(), dto.getPrice());
+        if (!matchBuyStockList.isEmpty()) {
+            for (ReservationBuy matchSaleStock : matchBuyStockList) {
+
+                MemberStock newData = buyMemberStock(matchSaleStock);
+                saveMemberStockPort.saveMemberStock(newData);
+                cancelReservationBuyStock(matchSaleStock.getId(), false);
+
+                //로그 등록
+                saveStockLogPort.saveStockLog(
+                        modelMapper.map(matchSaleStock, StockLog.class),
+                        StockLogStatus.BUY,
+                        matchSaleStock.getUuid());
+
+                //Notification 서버에 알림 전달
+                sendBuyNotification(
+                        matchSaleStock.getStockName(),
+                        matchSaleStock.getAmount(),
+                        matchSaleStock.getPrice(),
+                        matchSaleStock.getUuid()
+                );
+            }
+        }
+    }
+
+    private void sendCancelReservationBuyNotification(ReservationBuy findData) {
         String bodyData =
                 "종목명 : " + findData.getStockName() + "\n"
                         + "수량 : " + findData.getAmount() + "개\n"
@@ -177,113 +215,173 @@ public class ReservationStockService implements ReservationStockUseCase {
                 .build());
     }
 
-    @Transactional
-    @Override
-    public void concludeStock(RealChartInputDto dto) {
-        List<ReservationBuy> matchBuyStock = loadReservationStockPort.findMatchBuyStock(dto);
-        List<ReservationSale> matchSaleStock = loadReservationStockPort.findMatchSaleStock(dto);
+    private void sendCancelReservationSaleNotification(ReservationSale findData) {
+        String bodyData =
+                "종목명 : " + findData.getStockName() + "\n"
+                        + "수량 : " + findData.getAmount() + "개\n"
+                        + "총 가격 : " + findData.getAmount() * findData.getPrice() + "원\n"
+                        + "예약 매도 취소 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("예약 매도 취소 완료")
+                .body(bodyData)
+                .uuid(findData.getUuid())
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
+    }
 
-        if (!matchBuyStock.isEmpty()) {
-            log.info("예약 매수 start = {}", matchBuyStock.get(0).getStockName());
+    private ReservationSale createReservationSaleStock(ReservationStockInDto.Sale dto,
+            MemberStock findData) {
+        long targetAmount = findData.getAmount() - dto.getAmount();
 
-            saveReservationStockPort.concludeBuyStock(matchBuyStock);
-
-            for (ReservationBuy reservationBuy : matchBuyStock) {
-                Optional<MemberStockOutDto> memberStockOutDto = loadMemberStockPort.LoadMemberStockByUuidAndStockCode(
-                        reservationBuy.getUuid(), reservationBuy.getStockCode());
-
-                StockUseCase.StockBuySaleDto data = modelMapper.map(reservationBuy,
-                        StockUseCase.StockBuySaleDto.class);
-                if (memberStockOutDto.isEmpty()) {
-                    MemberStock memberStock = MemberStock.createMemberStock(data, data.getUuid());
-                    saveMemberStockPort.SaveMemberStock(memberStock);
-                    saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
-                            StockLogStatus.RESERVATION_BUY, data.getUuid());
-                    return;
-                }
-                MemberStock memberStock = MemberStock.updateMemberStock(memberStockOutDto.get(),
-                        data);
-                saveMemberStockPort.SaveMemberStock(memberStock);
-                saveStockLogPort.saveStockLog(modelMapper.map(data, StockLog.class),
-                        StockLogStatus.BUY, data.getUuid());
-
-                //알림 메세지 전송
-                String bodyData =
-                        "종목명 : " + reservationBuy.getStockName() + "\n"
-                                + "수량 : " + reservationBuy.getAmount() + "개\n"
-                                + "총 가격 : " + reservationBuy.getAmount() * reservationBuy.getPrice() + "원\n"
-                                + "예약 매수 체결 완료 되었습니다.";
-                messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
-                        .builder()
-                        .title("예약 매수 체결 완료")
-                        .body(bodyData)
-                        .uuid(reservationBuy.getUuid())
-                        .notificationLogTime(LocalDateTime.now().toString())
-                        .build());
-            }
+        if (targetAmount < 0) {
+            throw new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_AMOUNT_ERROR);
         }
 
-        if (!matchSaleStock.isEmpty()) {
-            log.info("예약 매도 start = {}", matchSaleStock.get(0).getStockName());
-            saveReservationStockPort.concludeSaleStock(matchSaleStock);
+        return ReservationSale
+                .builder()
+                .uuid(findData.getUuid())
+                .price(dto.getPrice())
+                .amount(dto.getAmount())
+                .stockCode(findData.getStockCode())
+                .stockName(findData.getStockName())
+                .build();
+    }
 
-            for (ReservationSale reservationSale : matchSaleStock) {
-                MemberStockOutDto memberStockOutDto = loadMemberStockPort
-                        .LoadMemberStockByUuidAndStockCode(reservationSale.getUuid(),
-                                reservationSale.getStockCode())
-                        .orElseThrow(() -> new CustomException(
-                                BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
-
-                StockUseCase.StockBuySaleDto data = modelMapper.map(reservationSale,
-                        StockUseCase.StockBuySaleDto.class);
-
-                MemberStock memberStock = MemberStock.saleMemberStock(memberStockOutDto, data);
-
-                //판매 후, 보유주식이 0이 되면, TotalPrice 와 TotalAmount reset 필요.
-                if(memberStock.getAmount() == 0L){
-                    memberStock = MemberStock.resetTotalData(memberStock);
-                }
-
-                MemberStock savedData = saveMemberStockPort.SaveMemberStock(memberStock);
-                StockLog savedLog = saveStockLogPort.saveStockLog(
-                        modelMapper.map(data, StockLog.class),
-                        StockLogStatus.RESERVATION_SALE, data.getUuid());
-
-                try {
-                    messageQueuePort.send(
-                            "trade-payment-sale",
-                            MessageQueueOutDto.BuyDto
-                                    .builder()
-                                    .uuid(reservationSale.getUuid())
-                                    .price(reservationSale.getPrice() * reservationSale.getAmount())
-                                    .build()).get();
-                } catch (Exception e) {
-                    log.error("Kafka Messaging 도중, 오류 발생");
-                    saveMemberStockPort.SaveMemberStock(
-                            createBeforeSaleMemberStock(savedData, memberStockOutDto));
-                    saveStockLogPort.deleteStockLog(savedLog);
-                    throw new CustomException(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
-                }
-
-                //알림 메세지 전송
-                String bodyData =
-                        "종목명 : " + reservationSale.getStockName() + "\n"
-                                + "수량 : " + reservationSale.getAmount() + "개\n"
-                                + "총 가격 : " + reservationSale.getAmount() * reservationSale.getPrice() + "원\n"
-                                + "예약 매도 체결 완료 되었습니다.";
-                messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
-                        .builder()
-                        .title("예약 매도 체결 완료")
-                        .body(bodyData)
-                        .uuid(reservationSale.getUuid())
-                        .notificationLogTime(LocalDateTime.now().toString())
-                        .build());
-            }
+    private Boolean sendReservationBuyCancelMessageUpdateCash(ReservationBuy findData) {
+        try {
+            messageQueuePort.send(
+                    "trade-payment-reservationcancel",
+                    MessageQueueOutDto.ReservationBuyCancelDto
+                            .builder()
+                            .uuid(findData.getUuid())
+                            .price(findData.getPrice() * findData.getAmount())
+                            .build()).get();
+            return true;
+        } catch (Exception e) {
+            log.error("[예약 매수 취소] 진행 중, 오류 발생-1");
+            return false;
         }
     }
 
-    private ReservationLogOutDto convertToBuyDto(ReservationBuy buy) {
-        ReservationLogOutDto dto = modelMapper.map(buy, ReservationLogOutDto.class);
+    private Boolean sendReservationBuyMessageUpdateCash(ReservationStockInDto.Buy dto, String uuid) {
+        try {
+            messageQueuePort.send("trade-payment-buy",
+                    MessageQueueOutDto.BuyDto
+                            .builder()
+                            .price(dto.getPrice() * dto.getAmount())
+                            .uuid(uuid)
+                            .build()).get();
+            return true;
+        } catch (Exception e) {
+            log.error("[예약 매수] 진행 중, 오류 발생-1");
+            return false;
+        }
+    }
+
+    private void sendSaleNotification(String stockName, Long amount, Long price, String uuid) {
+        //알림 메세지 전송
+        String bodyData =
+                "종목명 : " + stockName + "\n"
+                        + "수량 : " + amount + "개\n"
+                        + "총 가격 : "
+                        + amount * price + "원\n"
+                        + "예약 매도 체결 완료 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("예약 매도 체결 완료")
+                .body(bodyData)
+                .uuid(uuid)
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
+    }
+
+    private void sendBuyNotification(String stockName, Long amount, Long price, String uuid) {
+        String bodyData =
+                "종목명 : " + stockName + "\n"
+                        + "수량 : " + amount + "개\n"
+                        + "총 가격 : " + amount * price
+                        + "원\n"
+                        + "예약 매수 체결 완료 되었습니다.";
+        messageQueuePort.sendNotification(MessageQueueOutDto.TradeStockNotificationDto
+                .builder()
+                .title("예약 매수 체결 완료")
+                .body(bodyData)
+                .uuid(uuid)
+                .notificationLogTime(LocalDateTime.now().toString())
+                .build());
+    }
+
+    private boolean sendSaleMessageUpdateCash(String uuid, long price) {
+        try {
+            messageQueuePort.send(
+                    "trade-payment-sale",
+                    MessageQueueOutDto.BuyDto
+                            .builder()
+                            .uuid(uuid)
+                            .price(price)
+                            .build()).get();
+
+            return true;
+        } catch (Exception e) {
+            log.error("[일반 매도] 진행 중, 오류 발생-1");
+            return false;
+        }
+    }
+
+    private MemberStock buyMemberStock(ReservationBuy matchBuyStock) {
+        MemberStock targetData = loadMemberStockPort.loadMemberStock(matchBuyStock.getUuid(),
+                matchBuyStock.getStockCode()).orElse(MemberStock
+                .builder()
+                .uuid(matchBuyStock.getUuid())
+                .amount(0L)
+                .totalPrice(0L)
+                .totalAmount(0L)
+                .stockCode(matchBuyStock.getStockCode())
+                .stockName(matchBuyStock.getStockName())
+                .build());
+
+        return MemberStock
+                .builder()
+                .id(targetData.getId())
+                .uuid(targetData.getUuid())
+                .amount(targetData.getAmount() + matchBuyStock.getAmount())
+                .totalPrice(targetData.getTotalPrice() + (matchBuyStock.getAmount() * matchBuyStock.getPrice()))
+                .totalAmount(targetData.getTotalAmount() + matchBuyStock.getAmount())
+                .stockCode(targetData.getStockCode())
+                .stockName(targetData.getStockName())
+                .build();
+    }
+
+    private MemberStock saleMemberStock(ReservationSale matchSaleStock) {
+
+        //검증
+        //가지고 있는 주식이 있는지?
+        MemberStock targetData = loadMemberStockPort.loadMemberStock(
+                matchSaleStock.getUuid(), matchSaleStock.getStockCode()).orElseThrow(
+                () -> new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
+
+        long targetAmount = targetData.getAmount() - matchSaleStock.getAmount();
+
+        if (targetAmount < 0) {
+            throw new CustomException(BaseResponseCode.SALE_RESERVATION_STOCK_AMOUNT_ERROR);
+        }
+
+        //매도 후 Domain 생성
+        return MemberStock
+                .builder()
+                .id(targetData.getId())
+                .uuid(targetData.getUuid())
+                .amount(targetAmount)
+                .totalPrice(targetAmount == 0 ? 0 : targetData.getTotalPrice())
+                .totalAmount(targetAmount == 0 ? 0 : targetData.getTotalAmount())
+                .stockCode(targetData.getStockCode())
+                .stockName(targetData.getStockName())
+                .build();
+    }
+
+    private ReservationStockOutDto.Logs convertToBuyDto(ReservationBuy buy) {
+        ReservationStockOutDto.Logs dto = modelMapper.map(buy, ReservationStockOutDto.Logs.class);
 
         dto.setTotalPrice(String.valueOf(buy.getPrice() * buy.getAmount()));
         dto.setStatus(STATUS_BUY);
@@ -291,8 +389,8 @@ public class ReservationStockService implements ReservationStockUseCase {
         return dto;
     }
 
-    private ReservationLogOutDto convertToSaleDto(ReservationSale sale) {
-        ReservationLogOutDto dto = modelMapper.map(sale, ReservationLogOutDto.class);
+    private ReservationStockOutDto.Logs convertToSaleDto(ReservationSale sale) {
+        ReservationStockOutDto.Logs dto = modelMapper.map(sale, ReservationStockOutDto.Logs.class);
 
         dto.setTotalPrice(String.valueOf(sale.getPrice() * sale.getAmount()));
         dto.setStatus(STATUS_SALE);
@@ -300,47 +398,23 @@ public class ReservationStockService implements ReservationStockUseCase {
         return dto;
     }
 
-    private ReservationBuy createReservationBuyStock(StockBuySaleDto receiveStockBuyDto,
-            String uuid) {
+    private ReservationBuy createReservationBuyStock(ReservationStockInDto.Buy dto, String uuid) {
         return ReservationBuy
                 .builder()
                 .uuid(uuid)
-                .price(receiveStockBuyDto.getPrice())
-                .amount(receiveStockBuyDto.getAmount())
-                .stockCode(receiveStockBuyDto.getStockCode())
-                .stockName(receiveStockBuyDto.getStockName())
+                .price(dto.getPrice())
+                .amount(dto.getAmount())
+                .stockCode(dto.getStockCode())
+                .stockName(dto.getStockName())
                 .build();
     }
 
-    private ReservationSale createReservationSaleStock(StockBuySaleDto receiveStockBuyDto,
-            String uuid) {
-        return ReservationSale
-                .builder()
-                .uuid(uuid)
-                .price(receiveStockBuyDto.getPrice())
-                .amount(receiveStockBuyDto.getAmount())
-                .stockCode(receiveStockBuyDto.getStockCode())
-                .stockName(receiveStockBuyDto.getStockName())
-                .build();
-    }
-
-    /**
-     * 메세지 발행 중, 실패 시, 트랜잭션 롤백 진행을 위한 Domain 생성 매서드
-     *
-     * @param savedData
-     * @param beforeData
-     * @return
-     */
-    private MemberStock createBeforeSaleMemberStock(MemberStock savedData,
-            MemberStockOutDto beforeData) {
-        return MemberStock.builder()
-                .id(savedData.getId())
-                .uuid(beforeData.getUuid())
-                .amount(beforeData.getAmount())
-                .totalPrice(beforeData.getTotalPrice())
-                .totalAmount(beforeData.getTotalAmount())
-                .stockCode(beforeData.getStockCode())
-                .stockName(beforeData.getStockName())
-                .build();
+    private boolean isMemberCashSufficient(ReservationStockInDto.Buy buyDto, String accessToken) {
+        WonInfo findData = paymentUseCase.searchMemberCash(accessToken);
+        Long totalPrice = buyDto.getAmount() * buyDto.getPrice();
+        if (findData.getWon() < totalPrice) {
+            return false;
+        }
+        return true;
     }
 }

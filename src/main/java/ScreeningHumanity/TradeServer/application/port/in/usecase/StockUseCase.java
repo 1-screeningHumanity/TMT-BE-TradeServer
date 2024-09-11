@@ -1,28 +1,10 @@
 package ScreeningHumanity.TradeServer.application.port.in.usecase;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import ScreeningHumanity.TradeServer.application.port.in.dto.StockInDto;
 
 public interface StockUseCase {
 
-    void BuyStock(StockBuySaleDto stockBuyDto, String uuid, String accessToken);
-    void SaleStock(StockBuySaleDto stockSaleDto, String uuid);
+    void buyStock(StockInDto.Buy buyDto, String uuid, String accessToken);
 
-    @Getter
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @ToString
-    class StockBuySaleDto {
-
-        private String stockCode;
-        private Long price;
-        private Long amount;
-        private String uuid;
-        private String stockName;
-    }
+    void saleStock(StockInDto.Sale saleDto, String uuid);
 }
