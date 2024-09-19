@@ -14,10 +14,7 @@ import lombok.ToString;
 public class ReservationStockOutDto {
 
     @Getter
-    @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    @ToString
     @Setter
     public static class Logs {
 
@@ -31,5 +28,19 @@ public class ReservationStockOutDto {
         private String totalPrice;
         private String status;
         private String stockCode;
+
+        @Builder
+        private Logs(Long id, LocalDateTime createdAt, String time, String stockName, String price,
+                String amount, String totalPrice, String status, String stockCode) {
+            this.id = id;
+            this.createdAt = createdAt;
+            this.time = time;
+            this.stockName = stockName;
+            this.price = price;
+            this.amount = amount;
+            this.totalPrice = totalPrice;
+            this.status = status;
+            this.stockCode = stockCode;
+        }
     }
 }

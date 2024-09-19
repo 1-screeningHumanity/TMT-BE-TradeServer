@@ -11,6 +11,7 @@ import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,7 @@ public class ReservationStockController {
 
     @Operation(summary = "예약 매수 api", description = "예약 매수 API 호출")
     @PostMapping("/buy")
-    public BaseResponse<Void> ReservationStockBuy(
+    public BaseResponse<Void> reservationStockBuy(
             @Valid @RequestBody RequestDto.StockReservationBuy requestDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
@@ -51,19 +52,19 @@ public class ReservationStockController {
 
     @Operation(summary = "예약 매도 api", description = "예약 매도 API 호출")
     @PostMapping("/sale")
-    public BaseResponse<Void> ReservationStockSale(
-            @RequestBody RequestDto.StockSale requestStockSaleVo,
+    public BaseResponse<Void> reservationStockSale(
+            @Valid @RequestBody RequestDto.StockReservationSale requestDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         reservationStockUseCase.saleStock(
-                modelMapper.map(requestStockSaleVo, ReservationStockInDto.Sale.class),
+                modelMapper.map(requestDto, ReservationStockInDto.Sale.class),
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>();
     }
 
     @Operation(summary = "예약 매도/매수 조회 api", description = "예약 매도/매수 조회 API 호출")
     @GetMapping("/trade-lists")
-    public BaseResponse<List<ReservationStockOutDto.Logs>> ReservationStockLog(
+    public BaseResponse<List<ReservationStockOutDto.Logs>> reservationStockLog(
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
         List<ReservationStockOutDto.Logs> result = reservationStockUseCase.buySaleLog(
@@ -73,8 +74,8 @@ public class ReservationStockController {
 
     @Operation(summary = "예약 매도 취소 api", description = "예약 매도 취소 API 호출")
     @DeleteMapping("/sale/{id}")
-    public BaseResponse<Void> ReservationDeleteSaleStock(
-            @PathVariable Long id
+    public BaseResponse<Void> reservationDeleteSaleStock(
+            @PathVariable("id") Long id
     ) {
         reservationStockUseCase.cancelReservationSaleStock(id, true);
         return new BaseResponse<>();
@@ -82,8 +83,8 @@ public class ReservationStockController {
 
     @Operation(summary = "예약 매수 취소 api", description = "예약 매수 취소 API 호출")
     @DeleteMapping("/buy/{id}")
-    public BaseResponse<Void> ReservationDeleteBuyStock(
-            @PathVariable Long id
+    public BaseResponse<Void> reservationDeleteBuyStock(
+            @PathVariable("id") Long id
     ) {
         reservationStockUseCase.cancelReservationBuyStock(id, true);
         return new BaseResponse<>();

@@ -1,81 +1,113 @@
 package ScreeningHumanity.TradeServer.application.port.in.dto;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class RequestDto {
 
     @Getter
+    @NoArgsConstructor
     public static class StockBuy {
 
-        @NotNull
+        @NotBlank(message = "주식 코드는 필수입니다.")
         private String stockCode;
 
-        @NotNull
         @Min(value = 100L, message = "매수 가격은 100원 이상부터 입니다.")
         private Long price;
 
-        @NotNull
-        @Min(value = 1L, message = "매수 최소 수량은 1원 이상부터 입니다.")
+        @Positive(message = "매수 최소 수량은 1개 이상부터 입니다.")
         private Long amount;
 
-        @NotNull
+        @NotBlank(message = "주식 이름은 필수입니다.")
         private String stockName;
+
+        @Builder
+        private StockBuy(String stockCode, Long price, Long amount, String stockName) {
+            this.stockCode = stockCode;
+            this.price = price;
+            this.amount = amount;
+            this.stockName = stockName;
+        }
     }
 
     @Getter
+    @NoArgsConstructor
     public static class StockReservationBuy {
 
-        @NotNull
+        @NotBlank(message = "주식 코드는 필수입니다.")
         private String stockCode;
 
-        @NotNull
         @Min(value = 100L, message = "매수 가격은 100원 이상부터 입니다.")
         private Long price;
 
-        @NotNull
-        @Min(value = 1L, message = "매수 최소 수량은 1원 이상부터 입니다.")
+        @Positive(message = "예약 매수 최소 수량은 1개 이상부터 입니다.")
         private Long amount;
 
-        @NotNull
+        @NotBlank(message = "주식 이름은 필수입니다.")
         private String stockName;
+
+        @Builder
+        private StockReservationBuy(String stockCode, Long price, Long amount, String stockName) {
+            this.stockCode = stockCode;
+            this.price = price;
+            this.amount = amount;
+            this.stockName = stockName;
+        }
     }
 
     @Getter
+    @NoArgsConstructor
     public static class StockSale {
 
-        @NotNull
+        @NotBlank(message = "주식 코드는 필수입니다.")
         private String stockCode;
 
-        @NotNull
         @Min(value = 100L, message = "매도 가격은 100원 이상부터 입니다.")
         private Long price;
 
-        @NotNull
-        @Min(value = 1L, message = "매도 최소 수량은 1원 이상부터 입니다.")
+        @Positive(message = "매도 최소 수량은 1개 이상부터 입니다.")
         private Long amount;
 
-        @NotNull
+        @NotBlank(message = "주식 이름은 필수입니다.")
         private String stockName;
+
+        @Builder
+        private StockSale(String stockCode, Long price, Long amount, String stockName) {
+            this.stockCode = stockCode;
+            this.price = price;
+            this.amount = amount;
+            this.stockName = stockName;
+        }
     }
 
     @Getter
+    @NoArgsConstructor
     public static class StockReservationSale {
 
-        @NotNull
+        @NotBlank(message = "주식 코드는 필수입니다.")
         private String stockCode;
 
-        @NotNull
         @Min(value = 100L, message = "매도 가격은 100원 이상부터 입니다.")
         private Long price;
 
-        @NotNull
-        @Min(value = 1L, message = "매도 최소 수량은 1원 이상부터 입니다.")
+        @Positive(message = "예약 매도 최소 수량은 1개 이상부터 입니다.")
         private Long amount;
 
-        @NotNull
+        @NotBlank(message = "주식 이름은 필수입니다.")
         private String stockName;
+
+        @Builder
+        private StockReservationSale(String stockCode, Long price, Long amount, String stockName) {
+            this.stockCode = stockCode;
+            this.price = price;
+            this.amount = amount;
+            this.stockName = stockName;
+        }
     }
 
     @Getter

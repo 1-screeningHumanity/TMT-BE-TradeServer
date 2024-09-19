@@ -2,18 +2,16 @@ package ScreeningHumanity.TradeServer.global.common.exception;
 
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import java.util.Objects;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
@@ -33,16 +31,21 @@ public class ExceptionAdvice {
      * @return Exception Response validation 관련 Error 사항을 응답합니다. 유효성 검증 실패. ex)@email 형식에 맞지 않음. 길이가
      * 맞지 않음. 등등.
      */
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<?> validationException(ConstraintViolationException e) {
-        String message = e.getConstraintViolations().stream().map(ConstraintViolation::getMessage)
-                .findFirst()
-                .orElse("Constraint violation message not found");
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<?> validationException(BindException e) {
+        List<ObjectError> allErrors = e.getBindingResult().getAllErrors();
+        StringBuilder message = new StringBuilder();
+        for (ObjectError allError : allErrors) {
+            if(!message.isEmpty()){
+                message.append("\n");
+            }
+            message.append(allError.getDefaultMessage());
+        }
 
         BaseResponse<?> response = new BaseResponse<>(
                 BaseResponseCode.VALIDATION_FAIL_ERROR.getHttpStatus(),
                 BaseResponseCode.VALIDATION_FAIL_ERROR.isSuccess(),
-                message,
+                message.toString(),
                 BaseResponseCode.VALIDATION_FAIL_ERROR.getCode(),
                 null);
 
@@ -50,22 +53,20 @@ public class ExceptionAdvice {
     }
 
     /**
-     * @return Exception Response validation 관련 Error 사항을 응답합니다. 유효성 검증 실패. ex)@email 형식에 맞지 않음. 길이가
-     * 맞지 않음. 등등.
+     * @return
+     * @RequestParam 에 잘못된 값이 들어왔을경우 발생.
      */
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<?> handlerValidationException(HandlerMethodValidationException e) {
-
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> validationException(IllegalArgumentException e) {
         BaseResponse<?> response = new BaseResponse<>(
-                BaseResponseCode.VALIDATION_FAIL_ERROR.getHttpStatus(),
-                BaseResponseCode.VALIDATION_FAIL_ERROR.isSuccess(),
-                e.getMessage(),
-                BaseResponseCode.VALIDATION_FAIL_ERROR.getCode(),
+                BaseResponseCode.REQUEST_PARAM_ERROR.getHttpStatus(),
+                BaseResponseCode.REQUEST_PARAM_ERROR.isSuccess(),
+                BaseResponseCode.REQUEST_PARAM_ERROR.getMessage(),
+                BaseResponseCode.REQUEST_PARAM_ERROR.getCode(),
                 null);
 
         return new ResponseEntity<>(response, response.httpStatus());
     }
-
 
     /**
      * @return Client 잘못된 Method 입력
@@ -105,10 +106,10 @@ public class ExceptionAdvice {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<?> requestParameterException(MissingServletRequestParameterException e) {
         BaseResponse<?> response = new BaseResponse<>(
-                BaseResponseCode.REQUEST_PARAM_ERROR.getHttpStatus(),
-                BaseResponseCode.REQUEST_PARAM_ERROR.isSuccess(),
-                BaseResponseCode.REQUEST_PARAM_ERROR.getMessage(),
-                BaseResponseCode.REQUEST_PARAM_ERROR.getCode(),
+                BaseResponseCode.REQUEST_PARAM_MISSING_ERROR.getHttpStatus(),
+                BaseResponseCode.REQUEST_PARAM_MISSING_ERROR.isSuccess(),
+                BaseResponseCode.REQUEST_PARAM_MISSING_ERROR.getMessage(),
+                BaseResponseCode.REQUEST_PARAM_MISSING_ERROR.getCode(),
                 null);
 
         return new ResponseEntity<>(response, response.httpStatus());
@@ -124,24 +125,6 @@ public class ExceptionAdvice {
                 BaseResponseCode.NO_HANDLER_FOUND_ERROR.isSuccess(),
                 BaseResponseCode.NO_HANDLER_FOUND_ERROR.getMessage(),
                 BaseResponseCode.NO_HANDLER_FOUND_ERROR.getCode(),
-                null);
-
-        return new ResponseEntity<>(response, response.httpStatus());
-    }
-
-    /**
-     * @return
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> noHandlerException(MethodArgumentNotValidException e) {
-
-        String message = Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage();
-
-        BaseResponse<?> response = new BaseResponse<>(
-                BaseResponseCode.METHOD_NOT_ALLOW_ERROR.getHttpStatus(),
-                BaseResponseCode.METHOD_NOT_ALLOW_ERROR.isSuccess(),
-                message,
-                BaseResponseCode.METHOD_NOT_ALLOW_ERROR.getCode(),
                 null);
 
         return new ResponseEntity<>(response, response.httpStatus());

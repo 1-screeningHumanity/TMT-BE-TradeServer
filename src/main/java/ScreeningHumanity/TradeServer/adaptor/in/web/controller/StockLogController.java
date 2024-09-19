@@ -31,9 +31,9 @@ public class StockLogController {
 
     @Operation(summary = "매수/매도 조회 API", description = "매수/매도 조회 API 호출")
     @GetMapping("/trade-lists")
-    public BaseResponse<List<StockLogOutDto>> StockLog(
-            @RequestParam(defaultValue = "0", required = false) int page,
-            @RequestParam(defaultValue = "50", required = false) int size,
+    public BaseResponse<List<StockLogOutDto>> stockLog(
+            @RequestParam(value = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(value = "size", defaultValue = "50", required = false) int size,
 //            @RequestParam(defaultValue = "createdAt", required = false) String sortField,
 //            @RequestParam(defaultValue = "DESC", required = false) String sortDirection,
             @RequestHeader(AUTHORIZATION) String accessToken
@@ -43,6 +43,6 @@ public class StockLogController {
 //                PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDirection), sortField));
         String uuid = decodingToken.getUuid(accessToken);
 
-        return new BaseResponse<>(stockLogUseCase.LoadStockLog(pageable, uuid));
+        return new BaseResponse<>(stockLogUseCase.loadStockLog(pageable, uuid));
     }
 }
