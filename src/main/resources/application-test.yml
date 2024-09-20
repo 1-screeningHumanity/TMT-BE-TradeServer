@@ -42,4 +42,4 @@ eureka:
 logging:
   level:
     org.hibernate.type: debug
-    p6spy: info
+    org.springframework.transaction: debug
