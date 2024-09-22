@@ -2,7 +2,6 @@ package ScreeningHumanity.TradeServer.adaptor.in.feignclient;
 
 import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.PaymentUseCase;
-import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

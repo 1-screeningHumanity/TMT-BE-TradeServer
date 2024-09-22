@@ -14,8 +14,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "reservation_buy")
 public class ReservationBuyEntity extends BaseEntity {
@@ -37,4 +35,15 @@ public class ReservationBuyEntity extends BaseEntity {
 
     @Column(name = "stock_name", nullable = false)
     private String stockName;
+
+    @Builder
+    private ReservationBuyEntity(Long id, String uuid, Long price, Long amount, String stockCode,
+            String stockName) {
+        this.id = id;
+        this.uuid = uuid;
+        this.price = price;
+        this.amount = amount;
+        this.stockCode = stockCode;
+        this.stockName = stockName;
+    }
 }

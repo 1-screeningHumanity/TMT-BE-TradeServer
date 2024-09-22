@@ -37,6 +37,7 @@ public enum BaseResponseCode {
     BUY_RESERVATION_STOCK_CANCEL_FAIL_ERROR(HttpStatus.BAD_REQUEST, false, 2009, "예약 매수를 취소하다가 문제가 발생하였습니다."),
     BUY_STOCK_FAIL_ERROR(HttpStatus.BAD_REQUEST, false, 2010, "매수를 진행 중 문제가 발생하였습니다."),
     BUY_STOCK_NOT_ENOUGH_WON(HttpStatus.BAD_REQUEST, false, 2011, "돈이 부족 합니다."),
+    SALE_RESERVATION_ALL_STOCK_REGISTERED(HttpStatus.BAD_REQUEST, false, 2004, "예약 매도를 진행하는데, 모든 주식이 이미 예약진행 중입니다."),
 
     //공통 에러. 9000 ~ 9999
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, false, 9000, "서버 에러"),

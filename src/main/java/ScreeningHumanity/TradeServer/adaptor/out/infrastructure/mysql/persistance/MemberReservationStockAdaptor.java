@@ -120,4 +120,9 @@ public class MemberReservationStockAdaptor
                 .map(entity -> modelMapper.map(entity, ReservationSale.class))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public Optional<Long> countSaleStockByStockCode(String stockCode, String uuid) {
+        return reservationSaleJpaRepository.findReservedAmountByStockCode(stockCode, uuid);
+    }
 }

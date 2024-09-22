@@ -114,6 +114,11 @@ public class RequestDto {
     public static class WonInfo {
         @NotNull
         private Long won;
+
+        @Builder
+        private WonInfo(Long won) {
+            this.won = won;
+        }
     }
 
     @Getter

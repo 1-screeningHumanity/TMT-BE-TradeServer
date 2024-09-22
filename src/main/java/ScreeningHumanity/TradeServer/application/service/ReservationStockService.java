@@ -69,11 +69,16 @@ public class ReservationStockService implements ReservationStockUseCase {
     @Transactional
     @Override
     public void saleStock(ReservationStockInDto.Sale dto, String uuid) {
-
         //기존 데이터 찾기
         MemberStock findData = loadMemberStockPort.loadMemberStock(uuid, dto.getStockCode())
                 .orElseThrow(() -> new CustomException(
                         BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
+
+        //예약 매도 등록 가능 검증
+        if (Boolean.TRUE.equals(isAllStockAlreadyReservationForSell(
+                dto.getStockCode(), uuid, dto.getAmount()))) {
+            throw new CustomException(BaseResponseCode.SALE_RESERVATION_ALL_STOCK_REGISTERED);
+        }
 
         //예약 매도 등록
         ReservationSale newData = createReservationSaleStock(dto, findData);
@@ -157,7 +162,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                         StockLogStatus.RESERVATION_SALE,
                         matchSaleStock.getUuid());
 
-                //Payment 서버에 Cash 차감 요청
+                //Payment 서버에 Cash 증감 요청
                 if (Boolean.FALSE.equals(sendSaleMessageUpdateCash(
                         matchSaleStock.getUuid(),
                         matchSaleStock.getAmount() * matchSaleStock.getPrice()))) {
@@ -175,7 +180,8 @@ public class ReservationStockService implements ReservationStockUseCase {
     }
 
     private void doReservationBuyStock(ReservationStockInDto.RealTimeStockInfo dto) {
-        List<ReservationBuy> matchBuyStockList = loadReservationStockPort.findMatchBuyStock(dto.getStockCode(), dto.getPrice());
+        List<ReservationBuy> matchBuyStockList = loadReservationStockPort.findMatchBuyStock(
+                dto.getStockCode(), dto.getPrice());
         if (!matchBuyStockList.isEmpty()) {
             for (ReservationBuy matchSaleStock : matchBuyStockList) {
 
@@ -186,7 +192,7 @@ public class ReservationStockService implements ReservationStockUseCase {
                 //로그 등록
                 saveStockLogPort.saveStockLog(
                         modelMapper.map(matchSaleStock, StockLog.class),
-                        StockLogStatus.BUY,
+                        StockLogStatus.RESERVATION_BUY,
                         matchSaleStock.getUuid());
 
                 //Notification 서버에 알림 전달
@@ -264,7 +270,8 @@ public class ReservationStockService implements ReservationStockUseCase {
         }
     }
 
-    private Boolean sendReservationBuyMessageUpdateCash(ReservationStockInDto.Buy dto, String uuid) {
+    private Boolean sendReservationBuyMessageUpdateCash(ReservationStockInDto.Buy dto,
+            String uuid) {
         try {
             messageQueuePort.send("trade-payment-buy",
                     MessageQueueOutDto.BuyDto
@@ -346,7 +353,8 @@ public class ReservationStockService implements ReservationStockUseCase {
                 .id(targetData.getId())
                 .uuid(targetData.getUuid())
                 .amount(targetData.getAmount() + matchBuyStock.getAmount())
-                .totalPrice(targetData.getTotalPrice() + (matchBuyStock.getAmount() * matchBuyStock.getPrice()))
+                .totalPrice(targetData.getTotalPrice() + (matchBuyStock.getAmount()
+                        * matchBuyStock.getPrice()))
                 .totalAmount(targetData.getTotalAmount() + matchBuyStock.getAmount())
                 .stockCode(targetData.getStockCode())
                 .stockName(targetData.getStockName())
@@ -416,5 +424,12 @@ public class ReservationStockService implements ReservationStockUseCase {
             return false;
         }
         return true;
+    }
+
+    private Boolean isAllStockAlreadyReservationForSell(
+            String stockCode, String uuid, Long targetAmount) {
+        Long totalReservedAmount = loadReservationStockPort.countSaleStockByStockCode(stockCode,
+                uuid).orElse(0L);
+        return totalReservedAmount >= targetAmount;
     }
 }

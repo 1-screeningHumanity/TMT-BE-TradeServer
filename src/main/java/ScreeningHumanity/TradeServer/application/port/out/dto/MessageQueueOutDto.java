@@ -24,13 +24,18 @@ public class MessageQueueOutDto {
 
     @Getter
     @Builder
-    @AllArgsConstructor
     public static class SaleDto {
 
         @NotNull
         private String uuid;
         @NotNull
         private Long price;
+
+        @Builder
+        private SaleDto(String uuid, Long price) {
+            this.uuid = uuid;
+            this.price = price;
+        }
     }
 
     @Getter
