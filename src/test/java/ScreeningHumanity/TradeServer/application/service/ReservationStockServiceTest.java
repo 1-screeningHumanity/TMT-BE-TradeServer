@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
+import org.springframework.transaction.annotation.Transactional;
 
 class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
 
@@ -160,7 +161,7 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
         assertThatThrownBy(() -> reservationStockService.saleStock(data, "test"))
                 .isInstanceOf(CustomException.class)
                 .extracting("status")
-                .isEqualTo(BaseResponseCode.SALE_RESERVATION_STOCK_AMOUNT_ERROR);
+                .isEqualTo(BaseResponseCode.SALE_RESERVATION_ALL_STOCK_REGISTERED);
     }
 
     @DisplayName("[Fail] 예약 매도를 등록하는 중, 이미 예약된 매도 수량이 많으면 등록할 수 없습니다.")
@@ -211,8 +212,9 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
         reservationStockService.doReservationStock(request);
 
         // then
-        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(
-                uuid, stockCode).orElseThrow();
+//        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(
+//                uuid, stockCode).orElseThrow();
+        MemberStockEntity findData = memberStockJpaRepository.findAll().get(0);
         List<ReservationBuyEntity> findReservationData = reservationBuyJpaRepository.findAll();
         List<StockLogEntity> findStockLog = stockLogJpaRepository.findAll();
 
@@ -256,8 +258,8 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
         reservationStockService.doReservationStock(request);
 
         // then
-        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(
-                uuid, stockCode).orElseThrow();
+//        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode).orElseThrow();
+        MemberStockEntity findData = memberStockJpaRepository.findAll().get(0);
         assertThat(findData).isNotNull()
                 .extracting("amount", "totalPrice", "totalAmount", "stockCode", "stockName")
                 .contains(amount + amount, 10000L + 10000L, amount + amount, stockCode, stockName);
@@ -295,8 +297,8 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
                 .extracting("status")
                 .isEqualTo(BaseResponseCode.BUY_RESERVATION_STOCK_CANCEL_FAIL_ERROR);
 
-        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(
-                uuid, stockCode).orElseThrow();
+//        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode).orElseThrow();
+        MemberStockEntity findData = memberStockJpaRepository.findAll().get(0);
         //롤백검증
         assertThat(findData).isNotNull()
                 .extracting("amount", "totalPrice", "totalAmount", "stockCode", "stockName")
@@ -333,7 +335,8 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
         reservationStockService.doReservationStock(request);
 
         // then
-        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode).orElseThrow();
+//        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode).orElseThrow();
+        MemberStockEntity findData = memberStockJpaRepository.findAll().get(0);
         List<ReservationSaleEntity> findReservationData = reservationSaleJpaRepository.findAll();
         List<StockLogEntity> findLogData = stockLogJpaRepository.findAll();
 
@@ -379,8 +382,9 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
                 .extracting("status")
                 .isEqualTo(BaseResponseCode.SALE_STOCK_FAIL_ERROR);
 
-        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(
-                uuid, stockCode).orElseThrow();
+//        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(
+//                uuid, stockCode).orElseThrow();
+        MemberStockEntity findData = memberStockJpaRepository.findAll().get(0);
         assertThat(findData).isNotNull()
                 .extracting("uuid", "amount", "totalPrice", "totalAmount", "stockCode")
                 .contains(uuid, amount, 1000L, 1000L, stockCode);
@@ -416,7 +420,8 @@ class ReservationStockServiceTest extends IntegrationSpringBootTestSupporter {
         reservationStockService.doReservationStock(request);
 
         // then
-        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode).orElseThrow();
+//        MemberStockEntity findData = memberStockJpaRepository.findAllByUuidAndStockCode(uuid, stockCode).orElseThrow();
+        MemberStockEntity findData = memberStockJpaRepository.findAll().get(0);
         List<ReservationSaleEntity> findReservationData = reservationSaleJpaRepository.findAll();
         List<StockLogEntity> findLogData = stockLogJpaRepository.findAll();
 

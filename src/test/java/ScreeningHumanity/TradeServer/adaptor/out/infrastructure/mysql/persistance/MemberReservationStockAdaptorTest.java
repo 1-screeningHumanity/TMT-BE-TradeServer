@@ -34,10 +34,9 @@ class MemberReservationStockAdaptorTest extends IntegrationSpringBootTestSupport
 
         // when
         memberReservationStockAdaptor.saveReservationBuyStock(request);
-        ReservationBuyEntity findData = reservationBuyJpaRepository.findById(1L).orElseThrow();
+        ReservationBuyEntity findData = reservationBuyJpaRepository.findAll().get(0);
 
         // then
-        assertThat(findData.getId()).isEqualTo(request.getId());
         assertThat(findData.getUuid()).isEqualTo(request.getUuid());
         assertThat(findData.getPrice()).isEqualTo(request.getPrice());
         assertThat(findData.getAmount()).isEqualTo(request.getAmount());

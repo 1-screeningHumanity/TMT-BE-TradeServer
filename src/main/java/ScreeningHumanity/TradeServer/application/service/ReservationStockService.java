@@ -75,8 +75,8 @@ public class ReservationStockService implements ReservationStockUseCase {
                         BaseResponseCode.SALE_RESERVATION_STOCK_NOTFOUND_ERROR));
 
         //예약 매도 등록 가능 검증
-        if (Boolean.TRUE.equals(isAllStockAlreadyReservationForSell(
-                dto.getStockCode(), uuid, dto.getAmount()))) {
+        if (Boolean.FALSE.equals(isPossibleNewReservationSale(
+                dto.getStockCode(), uuid, dto.getAmount(), findData.getAmount()))) {
             throw new CustomException(BaseResponseCode.SALE_RESERVATION_ALL_STOCK_REGISTERED);
         }
 
@@ -426,10 +426,11 @@ public class ReservationStockService implements ReservationStockUseCase {
         return true;
     }
 
-    private Boolean isAllStockAlreadyReservationForSell(
-            String stockCode, String uuid, Long targetAmount) {
-        Long totalReservedAmount = loadReservationStockPort.countSaleStockByStockCode(stockCode,
-                uuid).orElse(0L);
-        return totalReservedAmount >= targetAmount;
+    private Boolean isPossibleNewReservationSale(
+            String stockCode, String uuid, Long targetAmount, Long heldAmount) {
+        Long totalReservedAmount = loadReservationStockPort.countSaleStockByStockCode(stockCode, uuid).orElse(0L);
+        Long possibleReservedAmount = heldAmount - totalReservedAmount;
+
+        return possibleReservedAmount >= targetAmount;
     }
 }

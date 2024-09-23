@@ -20,14 +20,17 @@ class StockLogServiceTest extends IntegrationSpringBootTestSupporter {
 
     @DisplayName("회원의 주식 거래 로그를 모두 불러옵니다. 조회한 순서대로 1번부터 번호를 매겨 반환합니다.")
     @Test
-    void loadStockLog() {
+    void loadStockLog() throws InterruptedException {
         // given
         String uuid = "test";
         Pageable pageable = PageRequest.of(0, 50);
 
         stockLogJpaRepository.save(createStockLogEntity(uuid, 1L, 1000L, StockLogStatus.BUY, "001", "주식1"));
+        Thread.sleep(100);
         stockLogJpaRepository.save(createStockLogEntity(uuid, 2L, 2000L, StockLogStatus.SALE, "002", "주식2"));
+        Thread.sleep(100);
         stockLogJpaRepository.save(createStockLogEntity(uuid, 3L, 3000L, StockLogStatus.RESERVATION_BUY, "003", "주식3"));
+        Thread.sleep(100);
         stockLogJpaRepository.save(createStockLogEntity(uuid, 4L, 4000L, StockLogStatus.RESERVATION_SALE, "004", "주식4"));
 
         // stubbing
