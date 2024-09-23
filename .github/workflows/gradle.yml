@@ -1,0 +1,22 @@
+name: build(test)
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # 원하는 Java 버전으로 설정
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
