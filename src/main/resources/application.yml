@@ -1,14 +1,3 @@
 spring:
   profiles:
     active: dev
-
-FEIGN_CLIENT:
-  PAYMENT:
-    URL: localhost:9002
-
-#Token
-JWT:
-  SECRET_KEY: sldkfjsoidfjwoeir12393012809vxcv89usdfkjn1203491iu0isdfl
-
-kafka:
-  bootstrap-server: localhost:9092

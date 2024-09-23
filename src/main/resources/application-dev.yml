@@ -1,13 +1,10 @@
 spring:
-  config:
-    activate:
-      on-profile: dev
   application:
     name: trade-server
   datasource:
-    url: jdbc:mysql://localhost:3320/tradedb
-    username: root
-    password: 'tmtdb@1234'
+    url: ${TRADE_DB}
+    username: ${TRADE_DB_USER}
+    password: ${TRADE_DB_PW}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -53,3 +50,14 @@ springdoc:
       enabled: true
   cache:
     disabled: true
+
+#Token
+JWT:
+  SECRET_KEY: ${JWT_SECRET_KEY}
+
+kafka:
+  bootstrap-server: ${KAFKA_SERVER}
+
+FEIGN_CLIENT:
+  PAYMENT:
+    URL: ${PAYMENT_URL}

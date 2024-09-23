@@ -43,3 +43,13 @@ logging:
   level:
     org.hibernate.type: debug
     org.springframework.transaction: debug
+
+FEIGN_CLIENT:
+  PAYMENT:
+    URL: localhost:9002
+
+kafka:
+  bootstrap-server: localhost:9092
+
+JWT:
+  SECRET_KEY: sldkfjsoidfjwoeir12393012809vxcv89usdfkjn1203491iu0isdfl
