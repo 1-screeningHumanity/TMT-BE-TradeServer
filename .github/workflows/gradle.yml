@@ -16,7 +16,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: '11'  # 원하는 Java 버전으로 설정
+          java-version: '17'  # 원하는 Java 버전으로 설정
 
       - name: Build with Gradle
         run: ./gradlew clean build
