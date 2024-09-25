@@ -1,0 +1,12 @@
+[[stock-list]]
+=== 보유 중인 주식 리스트
+
+==== HTTP Request
+include::{snippets}/stock-list/http-request.adoc[]
+include::{snippets}/stock-list/query-parameters.adoc[]
+==== HTTP Request Header
+include::{snippets}/stock-list/request-headers.adoc[]
+
+==== Http Response
+include::{snippets}/stock-list/http-response.adoc[]
+include::{snippets}/stock-list/response-fields.adoc[]

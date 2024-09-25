@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
  * 보유 주식 Domain
  */
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class MemberStock {
 
@@ -21,4 +19,16 @@ public class MemberStock {
     private Long totalAmount; //총 매수 주식 갯수 --금지
     private String stockCode; //종목 코드
     private String stockName; //종목 이름
+
+    @Builder
+    public MemberStock(Long id, String uuid, Long amount, Long totalPrice, Long totalAmount,
+            String stockCode, String stockName) {
+        this.id = id;
+        this.uuid = uuid;
+        this.amount = amount;
+        this.totalPrice = totalPrice;
+        this.totalAmount = totalAmount;
+        this.stockCode = stockCode;
+        this.stockName = stockName;
+    }
 }

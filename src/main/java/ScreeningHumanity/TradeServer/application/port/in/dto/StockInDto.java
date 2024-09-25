@@ -9,10 +9,7 @@ import lombok.ToString;
 public class StockInDto {
 
     @Getter
-    @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    @ToString
     public static class Buy {
 
         private String stockCode;
@@ -20,13 +17,19 @@ public class StockInDto {
         private Long amount;
         private String uuid;
         private String stockName;
+
+        @Builder
+        private Buy(String stockCode, Long price, Long amount, String uuid, String stockName) {
+            this.stockCode = stockCode;
+            this.price = price;
+            this.amount = amount;
+            this.uuid = uuid;
+            this.stockName = stockName;
+        }
     }
 
     @Getter
-    @Builder
-    @AllArgsConstructor
     @NoArgsConstructor
-    @ToString
     public static class Sale {
 
         private String stockCode;
@@ -34,5 +37,14 @@ public class StockInDto {
         private Long amount;
         private String uuid;
         private String stockName;
+
+        @Builder
+        private Sale(String stockCode, Long price, Long amount, String uuid, String stockName) {
+            this.stockCode = stockCode;
+            this.price = price;
+            this.amount = amount;
+            this.uuid = uuid;
+            this.stockName = stockName;
+        }
     }
 }

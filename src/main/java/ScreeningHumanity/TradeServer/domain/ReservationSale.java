@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
  * 예약 매도용 Domain
  */
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 public class ReservationSale {
     private Long id;
@@ -21,4 +19,16 @@ public class ReservationSale {
     private LocalDateTime createdAt;
     private String stockCode;
     private String stockName;
+
+    @Builder
+    private ReservationSale(Long id, String uuid, Long price, Long amount, LocalDateTime createdAt,
+            String stockCode, String stockName) {
+        this.id = id;
+        this.uuid = uuid;
+        this.price = price;
+        this.amount = amount;
+        this.createdAt = createdAt;
+        this.stockCode = stockCode;
+        this.stockName = stockName;
+    }
 }

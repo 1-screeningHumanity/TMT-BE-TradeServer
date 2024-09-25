@@ -7,8 +7,6 @@ import ScreeningHumanity.TradeServer.application.port.in.dto.StockInDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping
 @Slf4j
-@Tag(name = "Stock Buy/Sale API", description = "주식 매매 API")
 public class StockController {
 
     private final StockUseCase stockUseCase;
     private final ModelMapper modelMapper;
     private final DecodingToken decodingToken;
 
-    @Operation(summary = "매수 api", description = "매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> stockBuy(
             @Valid @RequestBody RequestDto.StockBuy requestStockBuyDto,
@@ -43,7 +39,6 @@ public class StockController {
         return new BaseResponse<>();
     }
 
-    @Operation(summary = "매도 api", description = "매도 API 호출")
     @PostMapping("/sale")
     public BaseResponse<Void> stockSale(
             @Valid @RequestBody RequestDto.StockSale requestStockSaleDto,

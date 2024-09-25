@@ -1,0 +1,61 @@
+[[Reservation-Stock-Buy]]
+=== 예약 매수 진행
+
+==== HTTP Request
+include::{snippets}/reservation-stock-buy/http-request.adoc[]
+include::{snippets}/reservation-stock-buy/request-fields.adoc[]
+==== HTTP Request Header
+include::{snippets}/reservation-stock-buy/request-headers.adoc[]
+
+==== Http Response
+include::{snippets}/reservation-stock-buy/http-response.adoc[]
+include::{snippets}/reservation-stock-buy/response-fields.adoc[]
+
+[[Reservation-Stock-Sale]]
+=== 예약 매도 진행
+
+==== HTTP Request
+include::{snippets}/reservation-stock-sale/http-request.adoc[]
+include::{snippets}/reservation-stock-sale/request-fields.adoc[]
+==== HTTP Request Header
+include::{snippets}/reservation-stock-sale/request-headers.adoc[]
+
+==== Http Response
+include::{snippets}/reservation-stock-sale/http-response.adoc[]
+include::{snippets}/reservation-stock-sale/response-fields.adoc[]
+
+[[Reservation-Stock-Log]]
+=== 예약 매매 리스트 조회
+
+==== HTTP Request
+include::{snippets}/reservation-stock-log/http-request.adoc[]
+==== HTTP Request Header
+include::{snippets}/reservation-stock-log/request-headers.adoc[]
+
+==== Http Response
+include::{snippets}/reservation-stock-log/http-response.adoc[]
+include::{snippets}/reservation-stock-log/response-fields.adoc[]
+
+[[Reservation-Stock-Buy-Delete]]
+=== 예약 매수 취소
+
+==== HTTP Request
+include::{snippets}/reservation-stock-buy-delete/http-request.adoc[]
+==== Path Parameter
+include::{snippets}/reservation-stock-buy-delete/path-parameters.adoc[]
+
+==== Http Response
+include::{snippets}/reservation-stock-buy-delete/http-response.adoc[]
+include::{snippets}/reservation-stock-buy-delete/response-fields.adoc[]
+
+[[Reservation-Stock-Sale-Delete]]
+=== 예약 매수 취소
+
+==== HTTP Request
+include::{snippets}/reservation-stock-sale-delete/http-request.adoc[]
+==== Path Parameter
+include::{snippets}/reservation-stock-sale-delete/path-parameters.adoc[]
+
+==== Http Response
+include::{snippets}/reservation-stock-sale-delete/http-response.adoc[]
+include::{snippets}/reservation-stock-sale-delete/response-fields.adoc[]
