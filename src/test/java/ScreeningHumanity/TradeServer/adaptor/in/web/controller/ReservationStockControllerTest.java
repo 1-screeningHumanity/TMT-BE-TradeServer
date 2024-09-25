@@ -305,7 +305,7 @@ class ReservationStockControllerTest extends IntegrationControllerTestSupporter 
 
     //--------------------------------------------------------------------
 
-    @DisplayName("[Success] 예약 매도 접수 처리를 진행 합니다.")
+    @DisplayName("[Success] 예약 매매 리스트를 조회합니다.")
     @Test
     void reservationStockLog() throws Exception {
         // given

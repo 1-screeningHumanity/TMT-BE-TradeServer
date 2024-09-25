@@ -33,24 +33,6 @@ logging:
     org.hibernate.type: info
     p6spy: info
 
-springdoc:
-  packages-to-scan: ScreeningHumanity.TradeServer
-  default-consumes-media-type: application/json;charset=UTF-8
-  default-produces-media-type: application/json;charset=UTF-8
-  swagger-ui:
-    path: /swagger-ui.html
-    disable-swagger-default-url: true
-    display-query-params-without-oauth2: true
-    doc-expansion: none
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /api-docs/json
-    groups:
-      enabled: true
-  cache:
-    disabled: true
-
 #Token
 JWT:
   SECRET_KEY: ${JWT_SECRET_KEY}

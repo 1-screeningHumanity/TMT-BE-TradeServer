@@ -1,0 +1,22 @@
+ifndef::snippets[]
+:snippets: ../../build/generated-snippets
+endif::[]
+= 주식 매매 REST API 문서
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+[[Stock-API]]
+== Stock API
+include::api/stock/stock.adoc[]
+
+[[Reservation-Stock-API]]
+== Reservation Stock API
+include::api/reservationStock/reservationStock.adoc[]
+
+[[Stock-List-API]]
+== Stock List API
+include::api/stockList/stockList.adoc[]

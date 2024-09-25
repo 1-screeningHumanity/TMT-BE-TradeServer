@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.5'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id "org.asciidoctor.jvm.convert" version "3.3.2"
 }
 
 group = 'ScreeningHumanity'
@@ -15,6 +16,7 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	asciidoctorExt
 }
 
 repositories {
@@ -26,6 +28,8 @@ ext {
 	set('springCloudVersion', "2023.0.0")
 	//https://github.com/spring-cloud/spring-cloud-netflix/issues/4275
 	//24/07 - 2023.0.1 version 오픈된 문제 있어서 0으로 사용.
+
+	snippetsDir = file('build/generated-snippets')
 }
 
 dependencies {
@@ -54,9 +58,6 @@ dependencies {
 	//H2
 	runtimeOnly 'com.h2database:h2:2.1.214'
 
-	//swagger
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
-
 	//Test Implementation
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -79,6 +80,10 @@ dependencies {
 
 	// Feign
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// RestDocs , asciidoctor
+	asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
 dependencyManagement {
@@ -106,3 +111,26 @@ clean {
 	delete file(generated)
 }
 //_____________________________________________
+
+//asciidoctor
+test {
+	outputs.dir snippetsDir
+}
+
+asciidoctor {
+	inputs.dir snippetsDir
+	configurations 'asciidoctorExt'
+
+	sources { //특정 파일만 html로 만든다.
+		include("**/index.adoc")
+	}
+	baseDirFollowsSourceFile() // 다른 adoc 파일을 include 할 때 경로를 baseDir로 맞춘다.
+	dependsOn test
+}
+
+bootJar {
+	dependsOn asciidoctor
+	from("${asciidoctor.outputDir}") {
+		into 'static/docs'
+	}
+}
