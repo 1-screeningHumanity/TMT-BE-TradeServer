@@ -1,16 +1,18 @@
 package ScreeningHumanity.TradeServer.adaptor.in.feignclient;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
+import ScreeningHumanity.TradeServer.application.port.in.usecase.PaymentUseCase;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-import ScreeningHumanity.TradeServer.adaptor.in.feignclient.vo.RequestVo;
-import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
+@Component
+@RequiredArgsConstructor
+public class PaymentFeignClient implements PaymentUseCase {
 
-@FeignClient(name = "Payment", url = "${FEIGN_CLIENT.PAYMENT.URL}")
-public interface PaymentFeignClient {
+    private final PaymentFeignClientInterface feignClient;
 
-    @GetMapping(value = "/woninfo")
-    BaseResponse<RequestVo.WonInfo> searchMemberCash(@RequestHeader(AUTHORIZATION) String accessToken);
+    @Override
+    public RequestDto.WonInfo searchMemberCash(String accessToken) {
+        return feignClient.searchMemberCash(accessToken).result();
+    }
 }

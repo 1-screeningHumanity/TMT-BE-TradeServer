@@ -5,5 +5,6 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 
 public interface StockLogUseCase {
-    List<StockLogOutDto> LoadStockLog(Pageable pageable, String uuid);
+
+    List<StockLogOutDto> loadStockLog(Pageable pageable, String uuid);
 }

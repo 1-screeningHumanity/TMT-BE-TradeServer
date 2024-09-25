@@ -23,14 +23,13 @@ public class StockLogService implements StockLogUseCase {
 
     @Transactional(readOnly = true)
     @Override
-    public List<StockLogOutDto> LoadStockLog(Pageable pageable, String uuid) {
+    public List<StockLogOutDto> loadStockLog(Pageable pageable, String uuid) {
         List<StockLog> stockLogs = loadStockLogPort.loadStockLog(pageable, uuid);
 
         AtomicLong indexId = new AtomicLong(1L);
         return stockLogs.stream()
                 .map(stockLog -> convertToDto(stockLog, indexId.getAndIncrement()))
                 .collect(Collectors.toList());
-
     }
 
     private StockLogOutDto convertToDto(StockLog stockLog, Long indexId) {

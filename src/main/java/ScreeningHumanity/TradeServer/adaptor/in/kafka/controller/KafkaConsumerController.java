@@ -1,7 +1,8 @@
 package ScreeningHumanity.TradeServer.adaptor.in.kafka.controller;
 
 
-import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.ReservationStockInDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.ReservationStockUseCase;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,9 +13,9 @@ import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class KafkaConsumerController {
@@ -23,26 +24,31 @@ public class KafkaConsumerController {
 
     private static final Long ALLOWED_MIN = 1L;
 
-    /**
-     * input = 실시간 주식 데이터 예약 매수/매도 체결
-     */
     @KafkaListener(topics = "realchart-trade-stockinfo")
     public void reservationStock(String kafkaMessage) {
-        RealChartInputDto dto = new RealChartInputDto();
+        RequestDto.RealTimeStockInfo dto = new RequestDto.RealTimeStockInfo();
         ObjectMapper mapper = new ObjectMapper();
         try {
             dto = mapper.readValue(kafkaMessage, new TypeReference<>() {
-
             });
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
 
-        if(Boolean.FALSE == checkDurationMin(dto.getDate())){
+        if (Boolean.FALSE == checkDurationMin(dto.getDate())) {
             return;
         }
 
-        reservationStockUseCase.concludeStock(dto);
+        reservationStockUseCase.doReservationStock(convertToDto(dto));
+    }
+
+    private ReservationStockInDto.RealTimeStockInfo convertToDto(RequestDto.RealTimeStockInfo dto) {
+        return ReservationStockInDto.RealTimeStockInfo
+                .builder()
+                .stockCode(dto.getStockCode())
+                .price(dto.getPrice())
+                .date(dto.getDate())
+                .build();
     }
 
     private Boolean checkDurationMin(String dateTime) {

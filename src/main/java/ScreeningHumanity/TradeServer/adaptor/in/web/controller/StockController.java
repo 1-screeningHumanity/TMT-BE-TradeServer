@@ -2,12 +2,11 @@ package ScreeningHumanity.TradeServer.adaptor.in.web.controller;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
-import ScreeningHumanity.TradeServer.adaptor.in.web.vo.RequestVo;
+import ScreeningHumanity.TradeServer.application.port.in.dto.RequestDto;
+import ScreeningHumanity.TradeServer.application.port.in.dto.StockInDto;
 import ScreeningHumanity.TradeServer.application.port.in.usecase.StockUseCase;
 import ScreeningHumanity.TradeServer.global.common.response.BaseResponse;
 import ScreeningHumanity.TradeServer.global.common.token.DecodingToken;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,35 +21,31 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping
 @Slf4j
-@Tag(name = "Stock Buy/Sale API", description = "주식 매매 API")
 public class StockController {
 
     private final StockUseCase stockUseCase;
     private final ModelMapper modelMapper;
     private final DecodingToken decodingToken;
 
-    @Operation(summary = "매수 api", description = "매수 API 호출")
     @PostMapping("/buy")
     public BaseResponse<Void> stockBuy(
-            @Valid @RequestBody RequestVo.StockBuy requestStockBuyVo,
+            @Valid @RequestBody RequestDto.StockBuy requestStockBuyDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        log.info("매수 API 실행");
-        stockUseCase.BuyStock(
-                modelMapper.map(requestStockBuyVo, StockUseCase.StockBuySaleDto.class),
+        stockUseCase.buyStock(
+                modelMapper.map(requestStockBuyDto, StockInDto.Buy.class),
                 decodingToken.getUuid(accessToken),
                 accessToken);
         return new BaseResponse<>();
     }
 
-    @Operation(summary = "매도 api", description = "매도 API 호출")
     @PostMapping("/sale")
     public BaseResponse<Void> stockSale(
-            @RequestBody RequestVo.StockSale requestStockSaleVo,
+            @Valid @RequestBody RequestDto.StockSale requestStockSaleDto,
             @RequestHeader(AUTHORIZATION) String accessToken
     ) {
-        stockUseCase.SaleStock(
-                modelMapper.map(requestStockSaleVo, StockUseCase.StockBuySaleDto.class),
+        stockUseCase.saleStock(
+                modelMapper.map(requestStockSaleDto, StockInDto.Sale.class),
                 decodingToken.getUuid(accessToken));
         return new BaseResponse<>();
     }

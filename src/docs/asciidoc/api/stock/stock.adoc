@@ -1,0 +1,25 @@
+[[stock-buy]]
+=== 즉시 매수 진행
+
+==== HTTP Request
+include::{snippets}/stock-buy/http-request.adoc[]
+include::{snippets}/stock-buy/request-fields.adoc[]
+==== HTTP Request Header
+include::{snippets}/stock-buy/request-headers.adoc[]
+
+==== Http Response
+include::{snippets}/stock-buy/http-response.adoc[]
+include::{snippets}/stock-buy/response-fields.adoc[]
+
+[[stock-sale]]
+=== 즉시 매도 진행
+
+==== HTTP Request
+include::{snippets}/stock-sale/http-request.adoc[]
+include::{snippets}/stock-sale/request-fields.adoc[]
+==== HTTP Request Header
+include::{snippets}/stock-sale/request-headers.adoc[]
+
+==== Http Response
+include::{snippets}/stock-sale/http-response.adoc[]
+include::{snippets}/stock-sale/response-fields.adoc[]

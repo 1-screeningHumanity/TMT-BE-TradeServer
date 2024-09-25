@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @Setter
 public class StockLogOutDto {
@@ -23,4 +21,16 @@ public class StockLogOutDto {
     private String amount;
     private String totalPrice;
     private StockLogStatus status;
+
+    @Builder
+    private StockLogOutDto(Long indexId, String time, String stockName, String price, String amount,
+            String totalPrice, StockLogStatus status) {
+        this.indexId = indexId;
+        this.time = time;
+        this.stockName = stockName;
+        this.price = price;
+        this.amount = amount;
+        this.totalPrice = totalPrice;
+        this.status = status;
+    }
 }

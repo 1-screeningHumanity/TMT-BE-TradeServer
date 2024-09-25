@@ -1,8 +1,8 @@
 package ScreeningHumanity.TradeServer.application.port.out.outport;
 
-import ScreeningHumanity.TradeServer.application.port.out.dto.MemberStockOutDto;
+import ScreeningHumanity.TradeServer.domain.MemberStock;
 import java.util.Optional;
 
 public interface LoadMemberStockPort {
-    Optional<MemberStockOutDto> LoadMemberStockByUuidAndStockCode(String uuid, String stockCode);
+    Optional<MemberStock> loadMemberStock(String uuid, String stockCode);
 }

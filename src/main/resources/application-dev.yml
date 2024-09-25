@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: trade-server
+  datasource:
+    url: ${TRADE_DB}
+    username: ${TRADE_DB_USER}
+    password: ${TRADE_DB_PW}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+
+#RAMDOM PORT
+server:
+  port: 0
+
+#eureka
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    hostname: trade-server
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URl}
+
+logging:
+  level:
+    org.hibernate.type: info
+    p6spy: info
+
+#Token
+JWT:
+  SECRET_KEY: ${JWT_SECRET_KEY}
+
+kafka:
+  bootstrap-server: ${KAFKA_SERVER}
+
+FEIGN_CLIENT:
+  PAYMENT:
+    URL: ${PAYMENT_URL}

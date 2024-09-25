@@ -1,6 +1,5 @@
 package ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.persistance;
 
-import ScreeningHumanity.TradeServer.adaptor.in.kafka.dto.RealChartInputDto;
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity.ReservationBuyEntity;
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.entity.ReservationSaleEntity;
 import ScreeningHumanity.TradeServer.adaptor.out.infrastructure.mysql.repository.ReservationBuyJpaRepository;
@@ -9,9 +8,8 @@ import ScreeningHumanity.TradeServer.application.port.out.outport.LoadReservatio
 import ScreeningHumanity.TradeServer.application.port.out.outport.SaveReservationStockPort;
 import ScreeningHumanity.TradeServer.domain.ReservationBuy;
 import ScreeningHumanity.TradeServer.domain.ReservationSale;
-import ScreeningHumanity.TradeServer.global.common.exception.CustomException;
-import ScreeningHumanity.TradeServer.global.common.response.BaseResponseCode;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -27,56 +25,66 @@ public class MemberReservationStockAdaptor
     private final ModelMapper modelMapper;
 
     @Override
-    public ReservationBuy SaveReservationBuyStock(ReservationBuy reservationBuy) {
-        ReservationBuyEntity saveData = reservationBuyJpaRepository.save(
-                ReservationBuyEntity.toEntityFrom(reservationBuy));
-
-        return ReservationBuyEntity.toDomainFrom(saveData);
+    public void saveReservationBuyStock(ReservationBuy reservationBuy) {
+        reservationBuyJpaRepository.save(
+                ReservationBuyEntity
+                        .builder()
+                        .id(reservationBuy.getId())
+                        .uuid(reservationBuy.getUuid())
+                        .price(reservationBuy.getPrice())
+                        .amount(reservationBuy.getAmount())
+                        .stockCode(reservationBuy.getStockCode())
+                        .stockName(reservationBuy.getStockName())
+                        .build());
     }
 
     @Override
-    public void SaveReservationSaleStock(ReservationSale reservationSale) {
-        reservationSaleJpaRepository.save(ReservationSaleEntity.toEntityFrom(reservationSale));
+    public void saveReservationSaleStock(ReservationSale reservationSale) {
+        reservationSaleJpaRepository.save(
+                ReservationSaleEntity
+                        .builder()
+                        .id(reservationSale.getId())
+                        .uuid(reservationSale.getUuid())
+                        .price(reservationSale.getPrice())
+                        .amount(reservationSale.getAmount())
+                        .stockCode(reservationSale.getStockCode())
+                        .stockName(reservationSale.getStockName())
+                        .build());
     }
 
     @Override
-    public ReservationSale DeleteReservationSaleStock(Long saleId) {
-        ReservationSaleEntity findResult = reservationSaleJpaRepository.findById(saleId).
-                orElseThrow(() -> new CustomException(
-                        BaseResponseCode.DELETE_RESERVATION_SALE_STOCK_ERROR));
-        reservationSaleJpaRepository.delete(findResult);
-
-        return ReservationSaleEntity.toDomainFrom(findResult);
+    public Optional<ReservationSale> deleteReservationSaleStock(Long saleId) {
+        return reservationSaleJpaRepository.findById(saleId)
+                .map(findData -> {
+                    reservationSaleJpaRepository.deleteById(saleId);
+                    return ReservationSale.builder()
+                            .id(findData.getId())
+                            .uuid(findData.getUuid())
+                            .price(findData.getPrice())
+                            .amount(findData.getAmount())
+                            .createdAt(findData.getCreatedAt())
+                            .stockCode(findData.getStockCode())
+                            .stockName(findData.getStockName())
+                            .build();
+                });
     }
 
     @Override
-    public ReservationBuy DeleteReservationBuyStock(Long buyId) {
-        ReservationBuyEntity findResult = reservationBuyJpaRepository.findById(buyId).
-                orElseThrow(() -> new CustomException(
-                        BaseResponseCode.DELETE_RESERVATION_BUY_STOCK_ERROR));
-        reservationBuyJpaRepository.delete(findResult);
+    public Optional<ReservationBuy> deleteReservationBuyStock(Long buyId) {
 
-        return ReservationBuyEntity.toDomainFrom(findResult);
-    }
-
-    /**
-     * 예약 구매의 매수 채결은 삭제 처리이다.
-     * 실제 memberStock 으로의 이전과 StockLog의 등록은 다른 port의 메서드를 통해 진행한다.
-     * @param buyList
-     */
-    @Override
-    public void concludeBuyStock(List<ReservationBuy> buyList) {
-        buyList.forEach(reservationBuy -> reservationBuyJpaRepository.deleteById(reservationBuy.getId()));
-    }
-
-    /**
-     * 예약 판매의 매수 채결은 삭제 처리이다.
-     * 실제 memberStock 으로의 이전과 StockLog의 등록은 다른 port의 메서드를 통해 진행한다.
-     * @param saleList
-     */
-    @Override
-    public void concludeSaleStock(List<ReservationSale> saleList) {
-        saleList.forEach(reservationSale -> reservationSaleJpaRepository.deleteById(reservationSale.getId()));
+        return reservationBuyJpaRepository.findById(buyId)
+                .map(findData -> {
+                    reservationBuyJpaRepository.deleteById(buyId);
+                    return ReservationBuy.builder()
+                            .id(findData.getId())
+                            .uuid(findData.getUuid())
+                            .price(findData.getPrice())
+                            .amount(findData.getAmount())
+                            .createdAt(findData.getCreatedAt())
+                            .stockCode(findData.getStockCode())
+                            .stockName(findData.getStockName())
+                            .build();
+                });
     }
 
     @Override
@@ -96,20 +104,25 @@ public class MemberReservationStockAdaptor
     }
 
     @Override
-    public List<ReservationBuy> findMatchBuyStock(RealChartInputDto dto) {
+    public List<ReservationBuy> findMatchBuyStock(String stockCode, Long nowPrice) {
         List<ReservationBuyEntity> findList = reservationBuyJpaRepository.findByStockCodeAndPrice(
-                dto.getStockCode(), dto.getPrice());
+                stockCode, nowPrice);
         return findList.stream()
                 .map(entity -> modelMapper.map(entity, ReservationBuy.class))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ReservationSale> findMatchSaleStock(RealChartInputDto dto) {
+    public List<ReservationSale> findMatchSaleStock(String stockCode, Long nowPrice) {
         List<ReservationSaleEntity> findList = reservationSaleJpaRepository.findByStockCodeAndPrice(
-                dto.getStockCode(), dto.getPrice());
+                stockCode, nowPrice);
         return findList.stream()
                 .map(entity -> modelMapper.map(entity, ReservationSale.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Long> countSaleStockByStockCode(String stockCode, String uuid) {
+        return reservationSaleJpaRepository.findReservedAmountByStockCode(stockCode, uuid);
     }
 }
